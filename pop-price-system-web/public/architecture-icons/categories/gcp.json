@@ -1,0 +1,242 @@
+{
+  "provider": "GCP",
+  "release": "e5bc3abd3527",
+  "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+  "packageSha256": "e5bc3abd3527dc2500e9bff7f15870783e2c764129c49b7cd4c1b4e105345002",
+  "categories": [
+    {
+      "provider": "GCP",
+      "code": "ai-machine-learning",
+      "name": "IA e aprendizado de máquina",
+      "originalName": "AI _ Machine Learning",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "agents",
+      "name": "Agents",
+      "originalName": "Agents",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "business-intelligence",
+      "name": "Business Intelligence",
+      "originalName": "Business Intelligence",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "collaboration",
+      "name": "Colaboração",
+      "originalName": "Collaboration",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "compute",
+      "name": "Computação",
+      "originalName": "Compute",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "containers",
+      "name": "Contêineres",
+      "originalName": "Containers",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "data-analytics",
+      "name": "Análise de dados",
+      "originalName": "Data Analytics",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "databases",
+      "name": "Bancos de dados",
+      "originalName": "Databases",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "devops",
+      "name": "DevOps",
+      "originalName": "DevOps",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "developer-tools",
+      "name": "Ferramentas de desenvolvimento",
+      "originalName": "Developer Tools",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "hybrid-multicloud",
+      "name": "Híbrido e multicloud",
+      "originalName": "Hybrid & Multicloud",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "integration-services",
+      "name": "Serviços de integração",
+      "originalName": "Integration Services",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "management-tools",
+      "name": "Ferramentas de gerenciamento",
+      "originalName": "Management Tools",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "maps-geospatial",
+      "name": "Maps & Geospatial",
+      "originalName": "Maps & Geospatial",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "marketplace",
+      "name": "Marketplace",
+      "originalName": "Marketplace",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "media-services",
+      "name": "Serviços de mídia",
+      "originalName": "Media Services",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "migration",
+      "name": "Migração",
+      "originalName": "Migration",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "mixed-reality",
+      "name": "Realidade mista",
+      "originalName": "Mixed Reality",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "networking",
+      "name": "Redes",
+      "originalName": "Networking",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "observability",
+      "name": "Observabilidade",
+      "originalName": "Observability",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "operations",
+      "name": "Operações",
+      "originalName": "Operations",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "security-identity",
+      "name": "Security Identity",
+      "originalName": "Security Identity",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "serverless-computing",
+      "name": "Serverless Computing",
+      "originalName": "Serverless Computing",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "storage",
+      "name": "Armazenamento",
+      "originalName": "Storage",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "web-mobile",
+      "name": "Web e dispositivos móveis",
+      "originalName": "Web & Mobile",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "GCP",
+      "code": "web3",
+      "name": "Web3",
+      "originalName": "Web3",
+      "sourceUrl": "https://services.google.com/fh/files/misc/category-icons.zip",
+      "release": "e5bc3abd3527",
+      "origin": "PROVIDER"
+    }
+  ]
+}

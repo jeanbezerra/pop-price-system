@@ -1,0 +1,3 @@
+# Local artifacts retained during project cleanup.
+.local-artifacts/
+.vscode/

@@ -1,0 +1,1400 @@
+{
+  "GET /api/v1/exchange-rates": {
+    "response": [
+      {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "quotationDate": "2026-11-17",
+        "quotationAt": "2026-11-17T16:00:00Z",
+        "buyRate": 4.999,
+        "sellRate": 5,
+        "source": "BCB_PTAX",
+        "bulletin": "Fechamento",
+        "sourceUrl": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/",
+        "synchronizedAt": "2026-11-18T12:00:00Z"
+      }
+    ]
+  },
+  "POST /api/v1/exchange-rates/synchronize": {
+    "request": {
+      "date": "2026-11-17"
+    },
+    "response": {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "quotationDate": "2026-11-17",
+      "quotationAt": "2026-11-17T16:00:00Z",
+      "buyRate": 4.999,
+      "sellRate": 5,
+      "source": "BCB_PTAX",
+      "bulletin": "Fechamento",
+      "sourceUrl": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/",
+      "synchronizedAt": "2026-11-18T12:00:00Z"
+    }
+  },
+  "GET /api/v1/architecture-models": {
+    "response": {
+      "items": [
+        {
+          "id": "44444444-4444-4444-8444-444444444444",
+          "name": "Plataforma de observabilidade",
+          "hoursPerMonth": 720,
+          "status": "PUBLISHED",
+          "revision": 1,
+          "updatedAt": "2026-11-18T12:00:00Z",
+          "publishedAt": "2026-11-18T12:10:00Z"
+        }
+      ],
+      "size": 20,
+      "offset": 0,
+      "hasMore": false
+    }
+  },
+  "GET /api/v1/architecture-models/{id}": {
+    "response": {
+      "id": "44444444-4444-4444-8444-444444444444",
+      "name": "Plataforma de observabilidade",
+      "hoursPerMonth": 720,
+      "graph": {
+        "nodes": [
+          {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "name": "Serviço da plataforma",
+            "x": 80,
+            "y": 80,
+            "rateId": 123,
+            "category": "compute",
+            "accountCode": "principal",
+            "quantity": 2,
+            "consumption": 1,
+            "consumptionUnit": "Hrs",
+            "period": "HOUR",
+            "retentionDays": null,
+            "availabilityZone": "use1-az1"
+          }
+        ],
+        "edges": []
+      },
+      "status": "DRAFT",
+      "revision": 0,
+      "createdAt": "2026-11-18T12:00:00Z",
+      "updatedAt": "2026-11-18T12:00:00Z",
+      "publishedAt": null
+    }
+  },
+  "POST /api/v1/architecture-models": {
+    "request": {
+      "name": "Plataforma de observabilidade",
+      "hoursPerMonth": 720,
+      "graph": {
+        "nodes": [
+          {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "name": "Serviço da plataforma",
+            "x": 80,
+            "y": 80,
+            "rateId": 123,
+            "category": "compute",
+            "accountCode": "principal",
+            "quantity": 2,
+            "consumption": 1,
+            "consumptionUnit": "Hrs",
+            "period": "HOUR",
+            "retentionDays": null,
+            "availabilityZone": "use1-az1"
+          }
+        ],
+        "edges": []
+      },
+      "revision": 0
+    },
+    "response": {
+      "id": "44444444-4444-4444-8444-444444444444",
+      "name": "Plataforma de observabilidade",
+      "hoursPerMonth": 720,
+      "graph": {
+        "nodes": [
+          {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "name": "Serviço da plataforma",
+            "x": 80,
+            "y": 80,
+            "rateId": 123,
+            "category": "compute",
+            "accountCode": "principal",
+            "quantity": 2,
+            "consumption": 1,
+            "consumptionUnit": "Hrs",
+            "period": "HOUR",
+            "retentionDays": null,
+            "availabilityZone": "use1-az1"
+          }
+        ],
+        "edges": []
+      },
+      "status": "DRAFT",
+      "revision": 0,
+      "createdAt": "2026-11-18T12:00:00Z",
+      "updatedAt": "2026-11-18T12:00:00Z",
+      "publishedAt": null
+    }
+  },
+  "PUT /api/v1/architecture-models/{id}": {
+    "request": {
+      "name": "Plataforma de observabilidade",
+      "hoursPerMonth": 720,
+      "graph": {
+        "nodes": [
+          {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "name": "Serviço da plataforma",
+            "x": 80,
+            "y": 80,
+            "rateId": 123,
+            "category": "compute",
+            "accountCode": "principal",
+            "quantity": 2,
+            "consumption": 1,
+            "consumptionUnit": "Hrs",
+            "period": "HOUR",
+            "retentionDays": null,
+            "availabilityZone": "use1-az1"
+          }
+        ],
+        "edges": []
+      },
+      "revision": 0
+    },
+    "response": {
+      "id": "44444444-4444-4444-8444-444444444444",
+      "name": "Plataforma de observabilidade",
+      "hoursPerMonth": 720,
+      "graph": {
+        "nodes": [
+          {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "name": "Serviço da plataforma",
+            "x": 80,
+            "y": 80,
+            "rateId": 123,
+            "category": "compute",
+            "accountCode": "principal",
+            "quantity": 2,
+            "consumption": 1,
+            "consumptionUnit": "Hrs",
+            "period": "HOUR",
+            "retentionDays": null,
+            "availabilityZone": "use1-az1"
+          }
+        ],
+        "edges": []
+      },
+      "status": "DRAFT",
+      "revision": 1,
+      "createdAt": "2026-11-18T12:00:00Z",
+      "updatedAt": "2026-11-18T12:00:00Z",
+      "publishedAt": null
+    }
+  },
+  "POST /api/v1/architecture-models/{id}/publish": {
+    "request": {
+      "revision": 0
+    },
+    "response": {
+      "id": "44444444-4444-4444-8444-444444444444",
+      "name": "Plataforma de observabilidade",
+      "hoursPerMonth": 720,
+      "graph": {
+        "nodes": [
+          {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "name": "Serviço da plataforma",
+            "x": 80,
+            "y": 80,
+            "rateId": 123,
+            "category": "compute",
+            "accountCode": "principal",
+            "quantity": 2,
+            "consumption": 1,
+            "consumptionUnit": "Hrs",
+            "period": "HOUR",
+            "retentionDays": null,
+            "availabilityZone": "use1-az1"
+          }
+        ],
+        "edges": []
+      },
+      "status": "PUBLISHED",
+      "revision": 1,
+      "createdAt": "2026-11-18T12:00:00Z",
+      "updatedAt": "2026-11-18T12:00:00Z",
+      "publishedAt": "2026-11-18T12:10:00Z"
+    }
+  },
+  "POST /api/v1/architecture-models/{id}/duplicate": {
+    "response": {
+      "id": "77777777-7777-4777-8777-777777777777",
+      "name": "Plataforma de observabilidade (cópia)",
+      "hoursPerMonth": 720,
+      "graph": {
+        "nodes": [
+          {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "name": "Serviço da plataforma",
+            "x": 80,
+            "y": 80,
+            "rateId": 123,
+            "category": "compute",
+            "accountCode": "principal",
+            "quantity": 2,
+            "consumption": 1,
+            "consumptionUnit": "Hrs",
+            "period": "HOUR",
+            "retentionDays": null,
+            "availabilityZone": "use1-az1"
+          }
+        ],
+        "edges": []
+      },
+      "status": "DRAFT",
+      "revision": 0,
+      "createdAt": "2026-11-18T12:00:00Z",
+      "updatedAt": "2026-11-18T12:00:00Z",
+      "publishedAt": null
+    }
+  },
+  "POST /api/v1/architecture-models/{id}/estimates": {
+    "request": {
+      "revision": 1,
+      "name": "Cenário produção",
+      "quoteId": "22222222-2222-4222-8222-222222222222"
+    },
+    "response": {
+      "id": "55555555-5555-4555-8555-555555555555",
+      "estimateId": "11111111-1111-4111-8111-111111111111",
+      "modelId": "44444444-4444-4444-8444-444444444444",
+      "modelRevision": 1,
+      "usd": {
+        "calculationId": "44444444-4444-4444-8444-444444444444",
+        "estimateId": "11111111-1111-4111-8111-111111111111",
+        "revision": 1,
+        "name": "Plataforma de observabilidade",
+        "calculatedAt": "2026-11-17T12:00:00Z",
+        "currency": "USD",
+        "hoursPerMonth": 720,
+        "unitConvention": "SI: GB=10^9 bytes; IEC: GiB=2^30 bytes; annual=12 modeled months; retention=steady state",
+        "complete": true,
+        "hourlyCost": 0.2,
+        "monthlyCost": 144,
+        "annualCost": 1728,
+        "knownMonthlySubtotal": 144,
+        "networkMonthlySubtotal": 0,
+        "items": [
+          {
+            "component": {
+              "id": "22222222-2222-4222-8222-222222222222",
+              "name": "Cluster de observabilidade",
+              "category": "compute",
+              "accountCode": "plataforma",
+              "rateId": 123,
+              "quantity": 2,
+              "consumption": 1,
+              "consumptionUnit": "Hrs",
+              "period": "HOUR",
+              "retentionDays": null,
+              "flow": null
+            },
+            "status": "PRICED",
+            "monthlyCost": 144,
+            "annualCost": 1728,
+            "charges": [
+              {
+                "key": "RESOURCE",
+                "monthlyBilledConsumption": 1440,
+                "unit": "Hrs",
+                "allocatedMonthlyCost": 144,
+                "aggregationGroupConsumption": 1440,
+                "prices": [
+                  {
+                    "price": {
+                      "id": 123,
+                      "versionId": 42,
+                      "provider": "AWS",
+                      "serviceCode": "AmazonEKS",
+                      "regionCode": "us-east-1",
+                      "sku": "SKU-ILUSTRATIVO",
+                      "family": "Compute",
+                      "attributes": {
+                        "regionCode": "us-east-1"
+                      },
+                      "usageType": "USAGE-ILUSTRATIVO",
+                      "operation": "",
+                      "modality": "OnDemand",
+                      "termCode": "TERMO-ILUSTRATIVO",
+                      "rateCode": "DIMENSAO-ILUSTRATIVA",
+                      "unit": "Hrs",
+                      "currency": "USD",
+                      "unitPrice": 0.1,
+                      "rangeBegin": 0,
+                      "rangeEnd": null,
+                      "effectiveAt": "2026-11-17T12:00:00Z",
+                      "sourceVersion": "VERSAO-ILUSTRATIVA",
+                      "sourceUrl": "https://example.invalid/catalogo/precos.json",
+                      "active": true,
+                      "appliesTo": []
+                    },
+                    "billedConsumption": 1440,
+                    "cost": 144
+                  }
+                ]
+              }
+            ],
+            "warning": null
+          }
+        ],
+        "byService": {
+          "AmazonEKS": 144
+        },
+        "byRegion": {
+          "us-east-1": 144
+        },
+        "byAccount": {
+          "plataforma": 144
+        },
+        "byCategory": {
+          "compute": 144
+        },
+        "warnings": []
+      },
+      "exchangeQuote": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "quotationDate": "2026-11-17",
+        "quotationAt": "2026-11-17T16:00:00Z",
+        "buyRate": 4.999,
+        "sellRate": 5,
+        "source": "BCB_PTAX",
+        "bulletin": "Fechamento",
+        "sourceUrl": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/",
+        "synchronizedAt": "2026-11-18T12:00:00Z"
+      },
+      "brl": {
+        "hourlyCost": 1,
+        "monthlyCost": 720,
+        "annualCost": 8640,
+        "knownMonthlySubtotal": 720,
+        "currency": "BRL",
+        "rounding": "USD total × PTAX venda; 2 casas decimais; HALF_UP"
+      },
+      "createdAt": "2026-11-18T12:15:00Z"
+    }
+  },
+  "GET /api/v1/valuations": {
+    "response": {
+      "items": [
+        {
+          "id": "55555555-5555-4555-8555-555555555555",
+          "estimateId": "11111111-1111-4111-8111-111111111111",
+          "modelId": "44444444-4444-4444-8444-444444444444",
+          "modelRevision": 1,
+          "usd": {
+            "calculationId": "44444444-4444-4444-8444-444444444444",
+            "estimateId": "11111111-1111-4111-8111-111111111111",
+            "revision": 1,
+            "name": "Plataforma de observabilidade",
+            "calculatedAt": "2026-11-17T12:00:00Z",
+            "currency": "USD",
+            "hoursPerMonth": 720,
+            "unitConvention": "SI: GB=10^9 bytes; IEC: GiB=2^30 bytes; annual=12 modeled months; retention=steady state",
+            "complete": true,
+            "hourlyCost": 0.2,
+            "monthlyCost": 144,
+            "annualCost": 1728,
+            "knownMonthlySubtotal": 144,
+            "networkMonthlySubtotal": 0,
+            "items": [
+              {
+                "component": {
+                  "id": "22222222-2222-4222-8222-222222222222",
+                  "name": "Cluster de observabilidade",
+                  "category": "compute",
+                  "accountCode": "plataforma",
+                  "rateId": 123,
+                  "quantity": 2,
+                  "consumption": 1,
+                  "consumptionUnit": "Hrs",
+                  "period": "HOUR",
+                  "retentionDays": null,
+                  "flow": null
+                },
+                "status": "PRICED",
+                "monthlyCost": 144,
+                "annualCost": 1728,
+                "charges": [
+                  {
+                    "key": "RESOURCE",
+                    "monthlyBilledConsumption": 1440,
+                    "unit": "Hrs",
+                    "allocatedMonthlyCost": 144,
+                    "aggregationGroupConsumption": 1440,
+                    "prices": [
+                      {
+                        "price": {
+                          "id": 123,
+                          "versionId": 42,
+                          "provider": "AWS",
+                          "serviceCode": "AmazonEKS",
+                          "regionCode": "us-east-1",
+                          "sku": "SKU-ILUSTRATIVO",
+                          "family": "Compute",
+                          "attributes": {
+                            "regionCode": "us-east-1"
+                          },
+                          "usageType": "USAGE-ILUSTRATIVO",
+                          "operation": "",
+                          "modality": "OnDemand",
+                          "termCode": "TERMO-ILUSTRATIVO",
+                          "rateCode": "DIMENSAO-ILUSTRATIVA",
+                          "unit": "Hrs",
+                          "currency": "USD",
+                          "unitPrice": 0.1,
+                          "rangeBegin": 0,
+                          "rangeEnd": null,
+                          "effectiveAt": "2026-11-17T12:00:00Z",
+                          "sourceVersion": "VERSAO-ILUSTRATIVA",
+                          "sourceUrl": "https://example.invalid/catalogo/precos.json",
+                          "active": true,
+                          "appliesTo": []
+                        },
+                        "billedConsumption": 1440,
+                        "cost": 144
+                      }
+                    ]
+                  }
+                ],
+                "warning": null
+              }
+            ],
+            "byService": {
+              "AmazonEKS": 144
+            },
+            "byRegion": {
+              "us-east-1": 144
+            },
+            "byAccount": {
+              "plataforma": 144
+            },
+            "byCategory": {
+              "compute": 144
+            },
+            "warnings": []
+          },
+          "exchangeQuote": {
+            "id": "22222222-2222-4222-8222-222222222222",
+            "quotationDate": "2026-11-17",
+            "quotationAt": "2026-11-17T16:00:00Z",
+            "buyRate": 4.999,
+            "sellRate": 5,
+            "source": "BCB_PTAX",
+            "bulletin": "Fechamento",
+            "sourceUrl": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/",
+            "synchronizedAt": "2026-11-18T12:00:00Z"
+          },
+          "brl": {
+            "hourlyCost": 1,
+            "monthlyCost": 720,
+            "annualCost": 8640,
+            "knownMonthlySubtotal": 720,
+            "currency": "BRL",
+            "rounding": "USD total × PTAX venda; 2 casas decimais; HALF_UP"
+          },
+          "createdAt": "2026-11-18T12:15:00Z"
+        }
+      ],
+      "size": 20,
+      "offset": 0,
+      "hasMore": false
+    }
+  },
+  "GET /api/v1/valuations/{id}": {
+    "response": {
+      "id": "55555555-5555-4555-8555-555555555555",
+      "estimateId": "11111111-1111-4111-8111-111111111111",
+      "modelId": "44444444-4444-4444-8444-444444444444",
+      "modelRevision": 1,
+      "usd": {
+        "calculationId": "44444444-4444-4444-8444-444444444444",
+        "estimateId": "11111111-1111-4111-8111-111111111111",
+        "revision": 1,
+        "name": "Plataforma de observabilidade",
+        "calculatedAt": "2026-11-17T12:00:00Z",
+        "currency": "USD",
+        "hoursPerMonth": 720,
+        "unitConvention": "SI: GB=10^9 bytes; IEC: GiB=2^30 bytes; annual=12 modeled months; retention=steady state",
+        "complete": true,
+        "hourlyCost": 0.2,
+        "monthlyCost": 144,
+        "annualCost": 1728,
+        "knownMonthlySubtotal": 144,
+        "networkMonthlySubtotal": 0,
+        "items": [
+          {
+            "component": {
+              "id": "22222222-2222-4222-8222-222222222222",
+              "name": "Cluster de observabilidade",
+              "category": "compute",
+              "accountCode": "plataforma",
+              "rateId": 123,
+              "quantity": 2,
+              "consumption": 1,
+              "consumptionUnit": "Hrs",
+              "period": "HOUR",
+              "retentionDays": null,
+              "flow": null
+            },
+            "status": "PRICED",
+            "monthlyCost": 144,
+            "annualCost": 1728,
+            "charges": [
+              {
+                "key": "RESOURCE",
+                "monthlyBilledConsumption": 1440,
+                "unit": "Hrs",
+                "allocatedMonthlyCost": 144,
+                "aggregationGroupConsumption": 1440,
+                "prices": [
+                  {
+                    "price": {
+                      "id": 123,
+                      "versionId": 42,
+                      "provider": "AWS",
+                      "serviceCode": "AmazonEKS",
+                      "regionCode": "us-east-1",
+                      "sku": "SKU-ILUSTRATIVO",
+                      "family": "Compute",
+                      "attributes": {
+                        "regionCode": "us-east-1"
+                      },
+                      "usageType": "USAGE-ILUSTRATIVO",
+                      "operation": "",
+                      "modality": "OnDemand",
+                      "termCode": "TERMO-ILUSTRATIVO",
+                      "rateCode": "DIMENSAO-ILUSTRATIVA",
+                      "unit": "Hrs",
+                      "currency": "USD",
+                      "unitPrice": 0.1,
+                      "rangeBegin": 0,
+                      "rangeEnd": null,
+                      "effectiveAt": "2026-11-17T12:00:00Z",
+                      "sourceVersion": "VERSAO-ILUSTRATIVA",
+                      "sourceUrl": "https://example.invalid/catalogo/precos.json",
+                      "active": true,
+                      "appliesTo": []
+                    },
+                    "billedConsumption": 1440,
+                    "cost": 144
+                  }
+                ]
+              }
+            ],
+            "warning": null
+          }
+        ],
+        "byService": {
+          "AmazonEKS": 144
+        },
+        "byRegion": {
+          "us-east-1": 144
+        },
+        "byAccount": {
+          "plataforma": 144
+        },
+        "byCategory": {
+          "compute": 144
+        },
+        "warnings": []
+      },
+      "exchangeQuote": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "quotationDate": "2026-11-17",
+        "quotationAt": "2026-11-17T16:00:00Z",
+        "buyRate": 4.999,
+        "sellRate": 5,
+        "source": "BCB_PTAX",
+        "bulletin": "Fechamento",
+        "sourceUrl": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/",
+        "synchronizedAt": "2026-11-18T12:00:00Z"
+      },
+      "brl": {
+        "hourlyCost": 1,
+        "monthlyCost": 720,
+        "annualCost": 8640,
+        "knownMonthlySubtotal": 720,
+        "currency": "BRL",
+        "rounding": "USD total × PTAX venda; 2 casas decimais; HALF_UP"
+      },
+      "createdAt": "2026-11-18T12:15:00Z"
+    }
+  },
+  "POST /api/v1/estimates/{id}/valuations": {
+    "request": {
+      "quoteId": "22222222-2222-4222-8222-222222222222"
+    },
+    "response": {
+      "id": "55555555-5555-4555-8555-555555555555",
+      "estimateId": "11111111-1111-4111-8111-111111111111",
+      "modelId": null,
+      "modelRevision": 0,
+      "usd": {
+        "calculationId": "44444444-4444-4444-8444-444444444444",
+        "estimateId": "11111111-1111-4111-8111-111111111111",
+        "revision": 1,
+        "name": "Plataforma de observabilidade",
+        "calculatedAt": "2026-11-17T12:00:00Z",
+        "currency": "USD",
+        "hoursPerMonth": 720,
+        "unitConvention": "SI: GB=10^9 bytes; IEC: GiB=2^30 bytes; annual=12 modeled months; retention=steady state",
+        "complete": true,
+        "hourlyCost": 0.2,
+        "monthlyCost": 144,
+        "annualCost": 1728,
+        "knownMonthlySubtotal": 144,
+        "networkMonthlySubtotal": 0,
+        "items": [
+          {
+            "component": {
+              "id": "22222222-2222-4222-8222-222222222222",
+              "name": "Cluster de observabilidade",
+              "category": "compute",
+              "accountCode": "plataforma",
+              "rateId": 123,
+              "quantity": 2,
+              "consumption": 1,
+              "consumptionUnit": "Hrs",
+              "period": "HOUR",
+              "retentionDays": null,
+              "flow": null
+            },
+            "status": "PRICED",
+            "monthlyCost": 144,
+            "annualCost": 1728,
+            "charges": [
+              {
+                "key": "RESOURCE",
+                "monthlyBilledConsumption": 1440,
+                "unit": "Hrs",
+                "allocatedMonthlyCost": 144,
+                "aggregationGroupConsumption": 1440,
+                "prices": [
+                  {
+                    "price": {
+                      "id": 123,
+                      "versionId": 42,
+                      "provider": "AWS",
+                      "serviceCode": "AmazonEKS",
+                      "regionCode": "us-east-1",
+                      "sku": "SKU-ILUSTRATIVO",
+                      "family": "Compute",
+                      "attributes": {
+                        "regionCode": "us-east-1"
+                      },
+                      "usageType": "USAGE-ILUSTRATIVO",
+                      "operation": "",
+                      "modality": "OnDemand",
+                      "termCode": "TERMO-ILUSTRATIVO",
+                      "rateCode": "DIMENSAO-ILUSTRATIVA",
+                      "unit": "Hrs",
+                      "currency": "USD",
+                      "unitPrice": 0.1,
+                      "rangeBegin": 0,
+                      "rangeEnd": null,
+                      "effectiveAt": "2026-11-17T12:00:00Z",
+                      "sourceVersion": "VERSAO-ILUSTRATIVA",
+                      "sourceUrl": "https://example.invalid/catalogo/precos.json",
+                      "active": true,
+                      "appliesTo": []
+                    },
+                    "billedConsumption": 1440,
+                    "cost": 144
+                  }
+                ]
+              }
+            ],
+            "warning": null
+          }
+        ],
+        "byService": {
+          "AmazonEKS": 144
+        },
+        "byRegion": {
+          "us-east-1": 144
+        },
+        "byAccount": {
+          "plataforma": 144
+        },
+        "byCategory": {
+          "compute": 144
+        },
+        "warnings": []
+      },
+      "exchangeQuote": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "quotationDate": "2026-11-17",
+        "quotationAt": "2026-11-17T16:00:00Z",
+        "buyRate": 4.999,
+        "sellRate": 5,
+        "source": "BCB_PTAX",
+        "bulletin": "Fechamento",
+        "sourceUrl": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/",
+        "synchronizedAt": "2026-11-18T12:00:00Z"
+      },
+      "brl": {
+        "hourlyCost": 1,
+        "monthlyCost": 720,
+        "annualCost": 8640,
+        "knownMonthlySubtotal": 720,
+        "currency": "BRL",
+        "rounding": "USD total × PTAX venda; 2 casas decimais; HALF_UP"
+      },
+      "createdAt": "2026-11-18T12:15:00Z"
+    }
+  },
+  "GET /api/v1/contracts": {
+    "response": {
+      "items": [
+        {
+          "id": "66666666-6666-4666-8666-666666666666",
+          "reference": "CT-2026-001",
+          "name": "Observabilidade",
+          "customerName": "Equipe plataforma",
+          "valuationId": "55555555-5555-4555-8555-555555555555",
+          "estimateId": "11111111-1111-4111-8111-111111111111",
+          "startsOn": "2026-12-01",
+          "months": 12,
+          "monthlyUsd": 144,
+          "monthlyBrl": 720,
+          "totalBrl": 8640,
+          "valuation": {
+            "id": "55555555-5555-4555-8555-555555555555",
+            "estimateId": "11111111-1111-4111-8111-111111111111",
+            "modelId": "44444444-4444-4444-8444-444444444444",
+            "modelRevision": 1,
+            "usd": {
+              "calculationId": "44444444-4444-4444-8444-444444444444",
+              "estimateId": "11111111-1111-4111-8111-111111111111",
+              "revision": 1,
+              "name": "Plataforma de observabilidade",
+              "calculatedAt": "2026-11-17T12:00:00Z",
+              "currency": "USD",
+              "hoursPerMonth": 720,
+              "unitConvention": "SI: GB=10^9 bytes; IEC: GiB=2^30 bytes; annual=12 modeled months; retention=steady state",
+              "complete": true,
+              "hourlyCost": 0.2,
+              "monthlyCost": 144,
+              "annualCost": 1728,
+              "knownMonthlySubtotal": 144,
+              "networkMonthlySubtotal": 0,
+              "items": [
+                {
+                  "component": {
+                    "id": "22222222-2222-4222-8222-222222222222",
+                    "name": "Cluster de observabilidade",
+                    "category": "compute",
+                    "accountCode": "plataforma",
+                    "rateId": 123,
+                    "quantity": 2,
+                    "consumption": 1,
+                    "consumptionUnit": "Hrs",
+                    "period": "HOUR",
+                    "retentionDays": null,
+                    "flow": null
+                  },
+                  "status": "PRICED",
+                  "monthlyCost": 144,
+                  "annualCost": 1728,
+                  "charges": [
+                    {
+                      "key": "RESOURCE",
+                      "monthlyBilledConsumption": 1440,
+                      "unit": "Hrs",
+                      "allocatedMonthlyCost": 144,
+                      "aggregationGroupConsumption": 1440,
+                      "prices": [
+                        {
+                          "price": {
+                            "id": 123,
+                            "versionId": 42,
+                            "provider": "AWS",
+                            "serviceCode": "AmazonEKS",
+                            "regionCode": "us-east-1",
+                            "sku": "SKU-ILUSTRATIVO",
+                            "family": "Compute",
+                            "attributes": {
+                              "regionCode": "us-east-1"
+                            },
+                            "usageType": "USAGE-ILUSTRATIVO",
+                            "operation": "",
+                            "modality": "OnDemand",
+                            "termCode": "TERMO-ILUSTRATIVO",
+                            "rateCode": "DIMENSAO-ILUSTRATIVA",
+                            "unit": "Hrs",
+                            "currency": "USD",
+                            "unitPrice": 0.1,
+                            "rangeBegin": 0,
+                            "rangeEnd": null,
+                            "effectiveAt": "2026-11-17T12:00:00Z",
+                            "sourceVersion": "VERSAO-ILUSTRATIVA",
+                            "sourceUrl": "https://example.invalid/catalogo/precos.json",
+                            "active": true,
+                            "appliesTo": []
+                          },
+                          "billedConsumption": 1440,
+                          "cost": 144
+                        }
+                      ]
+                    }
+                  ],
+                  "warning": null
+                }
+              ],
+              "byService": {
+                "AmazonEKS": 144
+              },
+              "byRegion": {
+                "us-east-1": 144
+              },
+              "byAccount": {
+                "plataforma": 144
+              },
+              "byCategory": {
+                "compute": 144
+              },
+              "warnings": []
+            },
+            "exchangeQuote": {
+              "id": "22222222-2222-4222-8222-222222222222",
+              "quotationDate": "2026-11-17",
+              "quotationAt": "2026-11-17T16:00:00Z",
+              "buyRate": 4.999,
+              "sellRate": 5,
+              "source": "BCB_PTAX",
+              "bulletin": "Fechamento",
+              "sourceUrl": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/",
+              "synchronizedAt": "2026-11-18T12:00:00Z"
+            },
+            "brl": {
+              "hourlyCost": 1,
+              "monthlyCost": 720,
+              "annualCost": 8640,
+              "knownMonthlySubtotal": 720,
+              "currency": "BRL",
+              "rounding": "USD total × PTAX venda; 2 casas decimais; HALF_UP"
+            },
+            "createdAt": "2026-11-18T12:15:00Z"
+          },
+          "createdAt": "2026-11-18T12:20:00Z"
+        }
+      ],
+      "size": 20,
+      "offset": 0,
+      "hasMore": false
+    }
+  },
+  "GET /api/v1/contracts/{id}": {
+    "response": {
+      "id": "66666666-6666-4666-8666-666666666666",
+      "reference": "CT-2026-001",
+      "name": "Observabilidade",
+      "customerName": "Equipe plataforma",
+      "valuationId": "55555555-5555-4555-8555-555555555555",
+      "estimateId": "11111111-1111-4111-8111-111111111111",
+      "startsOn": "2026-12-01",
+      "months": 12,
+      "monthlyUsd": 144,
+      "monthlyBrl": 720,
+      "totalBrl": 8640,
+      "valuation": {
+        "id": "55555555-5555-4555-8555-555555555555",
+        "estimateId": "11111111-1111-4111-8111-111111111111",
+        "modelId": "44444444-4444-4444-8444-444444444444",
+        "modelRevision": 1,
+        "usd": {
+          "calculationId": "44444444-4444-4444-8444-444444444444",
+          "estimateId": "11111111-1111-4111-8111-111111111111",
+          "revision": 1,
+          "name": "Plataforma de observabilidade",
+          "calculatedAt": "2026-11-17T12:00:00Z",
+          "currency": "USD",
+          "hoursPerMonth": 720,
+          "unitConvention": "SI: GB=10^9 bytes; IEC: GiB=2^30 bytes; annual=12 modeled months; retention=steady state",
+          "complete": true,
+          "hourlyCost": 0.2,
+          "monthlyCost": 144,
+          "annualCost": 1728,
+          "knownMonthlySubtotal": 144,
+          "networkMonthlySubtotal": 0,
+          "items": [
+            {
+              "component": {
+                "id": "22222222-2222-4222-8222-222222222222",
+                "name": "Cluster de observabilidade",
+                "category": "compute",
+                "accountCode": "plataforma",
+                "rateId": 123,
+                "quantity": 2,
+                "consumption": 1,
+                "consumptionUnit": "Hrs",
+                "period": "HOUR",
+                "retentionDays": null,
+                "flow": null
+              },
+              "status": "PRICED",
+              "monthlyCost": 144,
+              "annualCost": 1728,
+              "charges": [
+                {
+                  "key": "RESOURCE",
+                  "monthlyBilledConsumption": 1440,
+                  "unit": "Hrs",
+                  "allocatedMonthlyCost": 144,
+                  "aggregationGroupConsumption": 1440,
+                  "prices": [
+                    {
+                      "price": {
+                        "id": 123,
+                        "versionId": 42,
+                        "provider": "AWS",
+                        "serviceCode": "AmazonEKS",
+                        "regionCode": "us-east-1",
+                        "sku": "SKU-ILUSTRATIVO",
+                        "family": "Compute",
+                        "attributes": {
+                          "regionCode": "us-east-1"
+                        },
+                        "usageType": "USAGE-ILUSTRATIVO",
+                        "operation": "",
+                        "modality": "OnDemand",
+                        "termCode": "TERMO-ILUSTRATIVO",
+                        "rateCode": "DIMENSAO-ILUSTRATIVA",
+                        "unit": "Hrs",
+                        "currency": "USD",
+                        "unitPrice": 0.1,
+                        "rangeBegin": 0,
+                        "rangeEnd": null,
+                        "effectiveAt": "2026-11-17T12:00:00Z",
+                        "sourceVersion": "VERSAO-ILUSTRATIVA",
+                        "sourceUrl": "https://example.invalid/catalogo/precos.json",
+                        "active": true,
+                        "appliesTo": []
+                      },
+                      "billedConsumption": 1440,
+                      "cost": 144
+                    }
+                  ]
+                }
+              ],
+              "warning": null
+            }
+          ],
+          "byService": {
+            "AmazonEKS": 144
+          },
+          "byRegion": {
+            "us-east-1": 144
+          },
+          "byAccount": {
+            "plataforma": 144
+          },
+          "byCategory": {
+            "compute": 144
+          },
+          "warnings": []
+        },
+        "exchangeQuote": {
+          "id": "22222222-2222-4222-8222-222222222222",
+          "quotationDate": "2026-11-17",
+          "quotationAt": "2026-11-17T16:00:00Z",
+          "buyRate": 4.999,
+          "sellRate": 5,
+          "source": "BCB_PTAX",
+          "bulletin": "Fechamento",
+          "sourceUrl": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/",
+          "synchronizedAt": "2026-11-18T12:00:00Z"
+        },
+        "brl": {
+          "hourlyCost": 1,
+          "monthlyCost": 720,
+          "annualCost": 8640,
+          "knownMonthlySubtotal": 720,
+          "currency": "BRL",
+          "rounding": "USD total × PTAX venda; 2 casas decimais; HALF_UP"
+        },
+        "createdAt": "2026-11-18T12:15:00Z"
+      },
+      "createdAt": "2026-11-18T12:20:00Z"
+    }
+  },
+  "POST /api/v1/contracts": {
+    "request": {
+      "reference": "CT-2026-001",
+      "name": "Observabilidade",
+      "customerName": "Equipe plataforma",
+      "valuationId": "55555555-5555-4555-8555-555555555555",
+      "startsOn": "2026-12-01",
+      "months": 12
+    },
+    "response": {
+      "id": "66666666-6666-4666-8666-666666666666",
+      "reference": "CT-2026-001",
+      "name": "Observabilidade",
+      "customerName": "Equipe plataforma",
+      "valuationId": "55555555-5555-4555-8555-555555555555",
+      "estimateId": "11111111-1111-4111-8111-111111111111",
+      "startsOn": "2026-12-01",
+      "months": 12,
+      "monthlyUsd": 144,
+      "monthlyBrl": 720,
+      "totalBrl": 8640,
+      "valuation": {
+        "id": "55555555-5555-4555-8555-555555555555",
+        "estimateId": "11111111-1111-4111-8111-111111111111",
+        "modelId": "44444444-4444-4444-8444-444444444444",
+        "modelRevision": 1,
+        "usd": {
+          "calculationId": "44444444-4444-4444-8444-444444444444",
+          "estimateId": "11111111-1111-4111-8111-111111111111",
+          "revision": 1,
+          "name": "Plataforma de observabilidade",
+          "calculatedAt": "2026-11-17T12:00:00Z",
+          "currency": "USD",
+          "hoursPerMonth": 720,
+          "unitConvention": "SI: GB=10^9 bytes; IEC: GiB=2^30 bytes; annual=12 modeled months; retention=steady state",
+          "complete": true,
+          "hourlyCost": 0.2,
+          "monthlyCost": 144,
+          "annualCost": 1728,
+          "knownMonthlySubtotal": 144,
+          "networkMonthlySubtotal": 0,
+          "items": [
+            {
+              "component": {
+                "id": "22222222-2222-4222-8222-222222222222",
+                "name": "Cluster de observabilidade",
+                "category": "compute",
+                "accountCode": "plataforma",
+                "rateId": 123,
+                "quantity": 2,
+                "consumption": 1,
+                "consumptionUnit": "Hrs",
+                "period": "HOUR",
+                "retentionDays": null,
+                "flow": null
+              },
+              "status": "PRICED",
+              "monthlyCost": 144,
+              "annualCost": 1728,
+              "charges": [
+                {
+                  "key": "RESOURCE",
+                  "monthlyBilledConsumption": 1440,
+                  "unit": "Hrs",
+                  "allocatedMonthlyCost": 144,
+                  "aggregationGroupConsumption": 1440,
+                  "prices": [
+                    {
+                      "price": {
+                        "id": 123,
+                        "versionId": 42,
+                        "provider": "AWS",
+                        "serviceCode": "AmazonEKS",
+                        "regionCode": "us-east-1",
+                        "sku": "SKU-ILUSTRATIVO",
+                        "family": "Compute",
+                        "attributes": {
+                          "regionCode": "us-east-1"
+                        },
+                        "usageType": "USAGE-ILUSTRATIVO",
+                        "operation": "",
+                        "modality": "OnDemand",
+                        "termCode": "TERMO-ILUSTRATIVO",
+                        "rateCode": "DIMENSAO-ILUSTRATIVA",
+                        "unit": "Hrs",
+                        "currency": "USD",
+                        "unitPrice": 0.1,
+                        "rangeBegin": 0,
+                        "rangeEnd": null,
+                        "effectiveAt": "2026-11-17T12:00:00Z",
+                        "sourceVersion": "VERSAO-ILUSTRATIVA",
+                        "sourceUrl": "https://example.invalid/catalogo/precos.json",
+                        "active": true,
+                        "appliesTo": []
+                      },
+                      "billedConsumption": 1440,
+                      "cost": 144
+                    }
+                  ]
+                }
+              ],
+              "warning": null
+            }
+          ],
+          "byService": {
+            "AmazonEKS": 144
+          },
+          "byRegion": {
+            "us-east-1": 144
+          },
+          "byAccount": {
+            "plataforma": 144
+          },
+          "byCategory": {
+            "compute": 144
+          },
+          "warnings": []
+        },
+        "exchangeQuote": {
+          "id": "22222222-2222-4222-8222-222222222222",
+          "quotationDate": "2026-11-17",
+          "quotationAt": "2026-11-17T16:00:00Z",
+          "buyRate": 4.999,
+          "sellRate": 5,
+          "source": "BCB_PTAX",
+          "bulletin": "Fechamento",
+          "sourceUrl": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/",
+          "synchronizedAt": "2026-11-18T12:00:00Z"
+        },
+        "brl": {
+          "hourlyCost": 1,
+          "monthlyCost": 720,
+          "annualCost": 8640,
+          "knownMonthlySubtotal": 720,
+          "currency": "BRL",
+          "rounding": "USD total × PTAX venda; 2 casas decimais; HALF_UP"
+        },
+        "createdAt": "2026-11-18T12:15:00Z"
+      },
+      "createdAt": "2026-11-18T12:20:00Z"
+    }
+  },
+  "GET /api/v1/parameters": {
+    "response": {
+      "hoursPerMonth": 720,
+      "revision": 0,
+      "updatedAt": "2026-11-18T12:00:00Z"
+    }
+  },
+  "PUT /api/v1/parameters": {
+    "request": {
+      "hoursPerMonth": 720,
+      "revision": 0
+    },
+    "response": {
+      "hoursPerMonth": 720,
+      "revision": 1,
+      "updatedAt": "2026-11-18T12:00:00Z"
+    }
+  },
+  "GET /api/v1/architecture-icons": {
+    "response": {
+      "items": [
+        {
+          "provider": "AWS",
+          "key": "aws.ec2",
+          "release": "2026-07-31",
+          "name": "Amazon EC2",
+          "kind": "SERVICE",
+          "category": "Computação",
+          "tags": "AmazonEC2 compute servidor",
+          "assetPath": "/architecture-icons/aws/2026-07-31/ec2.svg",
+          "sha256": "5a7a0cef7a9f44ccdd544564ce9076abec3024090be0d6454504c49d149ce9ec",
+          "sourceUrl": "https://d1.awsstatic.com/onedam/marketing-channels/website/public/shared/architecture-icon-release/Icon-package_07312026.5846e92413caa21490223536cc97f1269e44fa92.zip"
+        }
+      ],
+      "size": 24,
+      "hasMore": false,
+      "nextAfter": null
+    }
+  },
+  "GET /api/v1/architecture-components": {
+    "response": {
+      "items": [
+        {
+          "provider": "AWS",
+          "serviceCode": "AmazonEC2",
+          "name": "Servidor de observabilidade",
+          "category": "Compute",
+          "description": "Processamento de telemetria",
+          "status": "ACTIVE",
+          "revision": 0,
+          "id": "77777777-7777-4777-8777-777777777777",
+          "serviceName": "Amazon EC2",
+          "icon": {
+            "provider": "AWS",
+            "key": "aws.ec2",
+            "release": "2026-07-31",
+            "name": "Amazon EC2",
+            "kind": "SERVICE",
+            "category": "Compute",
+            "tags": "AmazonEC2 compute servidor",
+            "assetPath": "/architecture-icons/aws/2026-07-31/ec2.svg",
+            "sha256": "5a7a0cef7a9f44ccdd544564ce9076abec3024090be0d6454504c49d149ce9ec",
+            "sourceUrl": "https://d1.awsstatic.com/onedam/marketing-channels/website/public/shared/architecture-icon-release/Icon-package_07312026.5846e92413caa21490223536cc97f1269e44fa92.zip"
+          },
+          "createdAt": "2026-11-20T12:00:00Z",
+          "updatedAt": "2026-11-20T12:00:00Z",
+          "characteristics": []
+        }
+      ],
+      "size": 20,
+      "hasMore": false,
+      "nextAfter": null
+    }
+  },
+  "GET /api/v1/architecture-components/{id}": {
+    "response": {
+      "provider": "AWS",
+      "serviceCode": "AmazonEC2",
+      "name": "Servidor de observabilidade",
+      "category": "Compute",
+      "description": "Processamento de telemetria",
+      "status": "ACTIVE",
+      "revision": 0,
+      "id": "77777777-7777-4777-8777-777777777777",
+      "serviceName": "Amazon EC2",
+      "icon": {
+        "provider": "AWS",
+        "key": "aws.ec2",
+        "release": "2026-07-31",
+        "name": "Amazon EC2",
+        "kind": "SERVICE",
+        "category": "Compute",
+        "tags": "AmazonEC2 compute servidor",
+        "assetPath": "/architecture-icons/aws/2026-07-31/ec2.svg",
+        "sha256": "5a7a0cef7a9f44ccdd544564ce9076abec3024090be0d6454504c49d149ce9ec",
+        "sourceUrl": "https://d1.awsstatic.com/onedam/marketing-channels/website/public/shared/architecture-icon-release/Icon-package_07312026.5846e92413caa21490223536cc97f1269e44fa92.zip"
+      },
+      "createdAt": "2026-11-20T12:00:00Z",
+      "updatedAt": "2026-11-20T12:00:00Z",
+      "characteristics": []
+    }
+  },
+  "POST /api/v1/architecture-components": {
+    "request": {
+      "provider": "AWS",
+      "serviceCode": "AmazonEC2",
+      "name": "Servidor de observabilidade",
+      "category": "Compute",
+      "description": "Processamento de telemetria",
+      "status": "ACTIVE",
+      "iconKey": "aws.ec2",
+      "iconRelease": "2026-07-31",
+      "revision": 0,
+      "characteristics": [
+        {
+          "name": "Memória",
+          "value": "8 GiB"
+        }
+      ]
+    },
+    "response": {
+      "provider": "AWS",
+      "serviceCode": "AmazonEC2",
+      "name": "Servidor de observabilidade",
+      "category": "Compute",
+      "description": "Processamento de telemetria",
+      "status": "ACTIVE",
+      "revision": 0,
+      "id": "77777777-7777-4777-8777-777777777777",
+      "serviceName": "Amazon EC2",
+      "icon": {
+        "provider": "AWS",
+        "key": "aws.ec2",
+        "release": "2026-07-31",
+        "name": "Amazon EC2",
+        "kind": "SERVICE",
+        "category": "Compute",
+        "tags": "AmazonEC2 compute servidor",
+        "assetPath": "/architecture-icons/aws/2026-07-31/ec2.svg",
+        "sha256": "5a7a0cef7a9f44ccdd544564ce9076abec3024090be0d6454504c49d149ce9ec",
+        "sourceUrl": "https://d1.awsstatic.com/onedam/marketing-channels/website/public/shared/architecture-icon-release/Icon-package_07312026.5846e92413caa21490223536cc97f1269e44fa92.zip"
+      },
+      "createdAt": "2026-11-20T12:00:00Z",
+      "updatedAt": "2026-11-20T12:00:00Z",
+      "characteristics": []
+    }
+  },
+  "PUT /api/v1/architecture-components/{id}": {
+    "request": {
+      "provider": "AWS",
+      "serviceCode": "AmazonEC2",
+      "name": "Servidor de observabilidade",
+      "category": "Compute",
+      "description": "Processamento de telemetria",
+      "status": "INACTIVE",
+      "iconKey": "aws.ec2",
+      "iconRelease": "2026-07-31",
+      "revision": 0,
+      "characteristics": [
+        {
+          "name": "Memória",
+          "value": "8 GiB"
+        }
+      ]
+    },
+    "response": {
+      "provider": "AWS",
+      "serviceCode": "AmazonEC2",
+      "name": "Servidor de observabilidade",
+      "category": "Compute",
+      "description": "Processamento de telemetria",
+      "status": "INACTIVE",
+      "revision": 1,
+      "id": "77777777-7777-4777-8777-777777777777",
+      "serviceName": "Amazon EC2",
+      "icon": {
+        "provider": "AWS",
+        "key": "aws.ec2",
+        "release": "2026-07-31",
+        "name": "Amazon EC2",
+        "kind": "SERVICE",
+        "category": "Compute",
+        "tags": "AmazonEC2 compute servidor",
+        "assetPath": "/architecture-icons/aws/2026-07-31/ec2.svg",
+        "sha256": "5a7a0cef7a9f44ccdd544564ce9076abec3024090be0d6454504c49d149ce9ec",
+        "sourceUrl": "https://d1.awsstatic.com/onedam/marketing-channels/website/public/shared/architecture-icon-release/Icon-package_07312026.5846e92413caa21490223536cc97f1269e44fa92.zip"
+      },
+      "createdAt": "2026-11-20T12:00:00Z",
+      "updatedAt": "2026-11-20T12:00:00Z",
+      "characteristics": []
+    }
+  },
+  "GET /api/v1/architecture-component-providers": {
+    "response": [
+      {
+        "code": "GENERIC",
+        "name": "Genérico"
+      },
+      {
+        "code": "AWS",
+        "name": "Amazon Web Services"
+      },
+      {
+        "code": "AZURE",
+        "name": "Microsoft Azure"
+      },
+      {
+        "code": "GCP",
+        "name": "Google Cloud"
+      }
+    ]
+  },
+  "GET /api/v1/architecture-component-categories": {
+    "response": [
+      {
+        "provider": "AWS",
+        "code": "Compute",
+        "name": "Computação",
+        "originalName": "Compute",
+        "sourceUrl": "https://aws.amazon.com/architecture/icons/",
+        "origin": "PROVIDER"
+      }
+    ]
+  }
+}

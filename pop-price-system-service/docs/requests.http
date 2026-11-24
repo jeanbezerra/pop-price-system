@@ -1,0 +1,146 @@
+@baseUrl = http://localhost:8080/pop-price-system-service
+@provider = AWS
+@serviceCode = AmazonEKS
+@regionCode = us-east-1
+@estimateId = replace-with-created-estimate-id
+@itemId = replace-with-created-item-id
+@rateId = replace-with-real-catalog-rate-id
+@synchronizationId = replace-with-returned-synchronization-id
+@calculationId = replace-with-returned-calculation-id
+
+### Installed providers
+GET {{baseUrl}}/api/v1/providers
+
+### Discover Service Codes (remote AWS call)
+POST {{baseUrl}}/api/v1/providers/{{provider}}/discovery
+
+### Discover service attributes and available commercial regions
+POST {{baseUrl}}/api/v1/providers/{{provider}}/discovery?service={{serviceCode}}
+
+### Persisted regions
+GET {{baseUrl}}/api/v1/providers/{{provider}}/regions
+
+### Persisted services (use nextAfter as after on subsequent pages)
+GET {{baseUrl}}/api/v1/catalog/services?provider={{provider}}&size=50
+
+### Remote Query API verification, one page (follow nextToken explicitly)
+GET {{baseUrl}}/api/v1/providers/{{provider}}/source-products?service={{serviceCode}}&region={{regionCode}}
+
+### Synchronous import. Use a new key for a new request or another scope.
+POST {{baseUrl}}/api/v1/synchronizations
+Content-Type: application/json
+Idempotency-Key: eks-us-east-1-import-001
+
+{"provider":"{{provider}}","serviceCode":"{{serviceCode}}","regionCode":"{{regionCode}}"}
+
+### Synchronization audit
+GET {{baseUrl}}/api/v1/synchronizations/{{synchronizationId}}
+
+### Latest audit records
+GET {{baseUrl}}/api/v1/synchronizations?size=20&offset=0
+
+### Retry FAILED execution synchronously (new audit id)
+POST {{baseUrl}}/api/v1/synchronizations/{{synchronizationId}}/retry
+
+### Products (filters use exact values discovered from the source)
+GET {{baseUrl}}/api/v1/catalog/products?provider={{provider}}&service={{serviceCode}}&region={{regionCode}}&size=50
+
+### On-Demand rates. Copy a real id and its billing unit into an estimate.
+GET {{baseUrl}}/api/v1/catalog/rates?provider={{provider}}&service={{serviceCode}}&region={{regionCode}}&modality=OnDemand&sort=asc&size=50
+
+### Specific quotation
+GET {{baseUrl}}/api/v1/catalog/rates/{{rateId}}
+
+### Historic versions
+GET {{baseUrl}}/api/v1/catalog/rates/{{rateId}}/history?sort=desc&size=50
+
+### Changes, including deactivations
+GET {{baseUrl}}/api/v1/catalog/changes?provider={{provider}}&service={{serviceCode}}&sort=desc
+
+### Create architecture with explicit monthly hours
+POST {{baseUrl}}/api/v1/estimates
+Content-Type: application/json
+
+{"name":"Plataforma de observabilidade","hoursPerMonth":720}
+
+### Add component; choose a real hourly rate, with compatible attributes
+POST {{baseUrl}}/api/v1/estimates/{{estimateId}}/items
+Content-Type: application/json
+
+{
+  "name":"Componente com cobrança horária",
+  "category":"compute",
+  "accountCode":"plataforma",
+  "rateId":{{rateId}},
+  "quantity":2,
+  "consumption":1,
+  "consumptionUnit":"Hrs",
+  "period":"HOUR"
+}
+
+### A component with no reliable quote is preserved and returned UNPRICEABLE
+POST {{baseUrl}}/api/v1/estimates/{{estimateId}}/items
+Content-Type: application/json
+
+{"name":"Consumo sem preço selecionado","category":"logs","accountCode":"plataforma","quantity":1,"consumption":100,"consumptionUnit":"GB","period":"MONTH"}
+
+### Private EC2 transfer in the same physical AZ: account boundary alone has no surcharge
+POST {{baseUrl}}/api/v1/estimates/{{estimateId}}/items
+Content-Type: application/json
+
+{
+  "name":"EC2 privado na mesma AZ física",
+  "category":"network",
+  "accountCode":"conta-a",
+  "quantity":1,
+  "consumption":100,
+  "consumptionUnit":"GB",
+  "period":"MONTH",
+  "flow":{
+    "trafficKey":"telemetry-a-b",
+    "sourceService":"AmazonEC2","destinationService":"AmazonEC2",
+    "sourceAccount":"conta-a","destinationAccount":"conta-b",
+    "sourceRegion":"us-east-1","destinationRegion":"us-east-1",
+    "sourceAz":"use1-az1","destinationAz":"use1-az1",
+    "direction":"INTERNAL","connectivity":"DIRECT",
+    "charges":[],"intermediaries":[]
+  }
+}
+
+### Calculate: complete=false and consolidated costs=null if any price or rule is missing
+POST {{baseUrl}}/api/v1/estimates/{{estimateId}}/calculate
+
+### Composition and last persisted snapshot
+GET {{baseUrl}}/api/v1/estimates/{{estimateId}}
+
+### Immutable calculation by identifier
+GET {{baseUrl}}/api/v1/estimates/{{estimateId}}/calculations/{{calculationId}}
+
+### Remove item (calculation history is retained)
+DELETE {{baseUrl}}/api/v1/estimates/{{estimateId}}/items/{{itemId}}
+
+### List estimates
+GET {{baseUrl}}/api/v1/estimates?size=20&offset=0
+
+### Expected 400: page size outside 1..200
+GET {{baseUrl}}/api/v1/catalog/services?size=0
+X-Correlation-ID: exemplo-erro-paginacao
+
+### Expected 400: malformed JSON in attributes
+GET {{baseUrl}}/api/v1/catalog/products?attributes=%7B
+X-Correlation-ID: exemplo-erro-atributos
+
+### Expected 400: invalid estimate UUID
+GET {{baseUrl}}/api/v1/estimates/uuid-invalido
+X-Correlation-ID: exemplo-erro-uuid
+
+### Expected 400: empty name; response includes violations for the request body
+POST {{baseUrl}}/api/v1/estimates
+Content-Type: application/json
+X-Correlation-ID: exemplo-erro-validacao
+
+{"name":"","hoursPerMonth":720}
+
+### Expected 400: provider has no installed integration (no AWS call)
+POST {{baseUrl}}/api/v1/providers/OUTRO/discovery
+X-Correlation-ID: exemplo-erro-provedor

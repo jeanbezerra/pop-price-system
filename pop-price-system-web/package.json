@@ -1,0 +1,42 @@
+{
+  "name": "pop-price-system-web",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=24.19.0 <25",
+    "npm": ">=11 <13"
+  },
+  "packageManager": "npm@12.0.2",
+  "scripts": {
+    "dev": "node scripts/next.mjs dev --hostname 127.0.0.1",
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/start.mjs",
+    "typecheck": "node scripts/next.mjs typegen && tsc --noEmit",
+    "check:assets": "node scripts/check-assets.mjs",
+    "test:e2e": "playwright test",
+    "format": "prettier --write src scripts tests *.json *.ts *.md docs",
+    "format:check": "prettier --check src scripts tests *.json *.ts *.md docs"
+  },
+  "dependencies": {
+    "@fluentui/react-components": "9.75.2",
+    "@fluentui/react-icons": "2.0.346",
+    "@fontsource-variable/inter": "5.3.0",
+    "@griffel/react": "1.7.8",
+    "@next/env": "16.4.6",
+    "@xyflow/react": "13.0.2",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.1",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "prettier": "3.10.1",
+    "typescript": "7.0.2"
+  }
+}

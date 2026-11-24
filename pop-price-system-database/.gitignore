@@ -1,0 +1,17 @@
+target/
+__pycache__/
+*.py[cod]
+.venv/
+.env*
+!.env.example
+*.log
+*.err
+*.pid
+*.dump
+*.backup
+*.key
+*.pem
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,269 @@
+{
+  "provider": "AZURE",
+  "release": "v25",
+  "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+  "packageSha256": "f293d99252b3638557dd08ccbff9f2529083473d39b373fb2af29a7200351339",
+  "categories": [
+    {
+      "provider": "AZURE",
+      "code": "ai-machine-learning",
+      "name": "IA e aprendizado de máquina",
+      "originalName": "ai + machine learning",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "analytics",
+      "name": "Análise de dados",
+      "originalName": "analytics",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "app-services",
+      "name": "Serviços de aplicações",
+      "originalName": "app services",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "azure-ecosystem",
+      "name": "Ecossistema Azure",
+      "originalName": "azure ecosystem",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "blockchain",
+      "name": "blockchain",
+      "originalName": "blockchain",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "compute",
+      "name": "Computação",
+      "originalName": "compute",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "containers",
+      "name": "Contêineres",
+      "originalName": "containers",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "databases",
+      "name": "Bancos de dados",
+      "originalName": "databases",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "developer-tools",
+      "name": "Ferramentas de desenvolvimento",
+      "originalName": "developer tools",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "devops",
+      "name": "DevOps",
+      "originalName": "devops",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "general",
+      "name": "Geral",
+      "originalName": "general",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "hybrid-multicloud",
+      "name": "Híbrido e multicloud",
+      "originalName": "hybrid + multicloud",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "identity",
+      "name": "Identidade",
+      "originalName": "identity",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "integration",
+      "name": "Integração",
+      "originalName": "integration",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "intune",
+      "name": "intune",
+      "originalName": "intune",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "iot",
+      "name": "Internet das coisas",
+      "originalName": "iot",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "management-governance",
+      "name": "Gerenciamento e governança",
+      "originalName": "management + governance",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "menu",
+      "name": "Menu",
+      "originalName": "menu",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "migrate",
+      "name": "Migrar",
+      "originalName": "migrate",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "migration",
+      "name": "Migração",
+      "originalName": "migration",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "mixed-reality",
+      "name": "Realidade mista",
+      "originalName": "mixed reality",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "mobile",
+      "name": "Dispositivos móveis",
+      "originalName": "mobile",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "monitor",
+      "name": "Monitoramento",
+      "originalName": "monitor",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "networking",
+      "name": "Redes",
+      "originalName": "networking",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "new-icons",
+      "name": "Novos ícones",
+      "originalName": "new icons",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "other",
+      "name": "Outros",
+      "originalName": "other",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "security",
+      "name": "Segurança",
+      "originalName": "security",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "storage",
+      "name": "Armazenamento",
+      "originalName": "storage",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    },
+    {
+      "provider": "AZURE",
+      "code": "web",
+      "name": "Web",
+      "originalName": "web",
+      "sourceUrl": "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V25.zip",
+      "release": "v25",
+      "origin": "PROVIDER"
+    }
+  ]
+}

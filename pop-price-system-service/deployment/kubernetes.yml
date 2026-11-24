@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ratecard
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratecard
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ratecard
+  template:
+    metadata:
+      labels:
+        app: ratecard
+    spec:
+      serviceAccountName: ratecard
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: api
+          image: pop-price-system-service:0.0.1-SNAPSHOT
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prd
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: {name: ratecard-database, key: url}
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef: {name: ratecard-database, key: username}
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: ratecard-database, key: password}
+            - name: DB_POOL_SIZE
+              value: "8"
+            - name: AWS_PRICING_REGION
+              value: us-east-1
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: "1", memory: 768Mi}
+          startupProbe:
+            httpGet: {path: /pop-price-system-service/actuator/health/liveness, port: http}
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet: {path: /pop-price-system-service/actuator/health/readiness, port: http}
+          livenessProbe:
+            httpGet: {path: /pop-price-system-service/actuator/health/liveness, port: http}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ratecard
+spec:
+  selector:
+    app: ratecard
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
