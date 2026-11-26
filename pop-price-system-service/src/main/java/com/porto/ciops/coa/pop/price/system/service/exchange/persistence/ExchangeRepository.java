@@ -16,13 +16,13 @@ public class ExchangeRepository {
             rs.getBigDecimal("buy_rate"),rs.getBigDecimal("sell_rate"),rs.getString("source"),rs.getString("bulletin"),rs.getString("source_url"),rs.getTimestamp("synchronized_at").toInstant());
     public ExchangeQuote insert(Observation observation) {
         var q = observation.quote();
-        jdbc.sql("INSERT INTO ratecard.exchange_quote(id,quotation_date,quotation_at,buy_rate,sell_rate,source,bulletin,source_url,payload) VALUES(:id,:day,:at,:buy,:sell,:source,:bulletin,:url,CAST(:payload AS jsonb)) ON CONFLICT(quotation_at,buy_rate,sell_rate) DO NOTHING")
+        jdbc.sql("INSERT INTO pop_price_system_service.exchange_quote(id,quotation_date,quotation_at,buy_rate,sell_rate,source,bulletin,source_url,payload) VALUES(:id,:day,:at,:buy,:sell,:source,:bulletin,:url,CAST(:payload AS jsonb)) ON CONFLICT(quotation_at,buy_rate,sell_rate) DO NOTHING")
                 .param("id",q.id()).param("day",q.quotationDate()).param("at",java.sql.Timestamp.from(q.quotationAt()))
                 .param("buy",q.buyRate()).param("sell",q.sellRate()).param("source",q.source()).param("bulletin",q.bulletin())
                 .param("url",q.sourceUrl()).param("payload",observation.payload()).update();
-        return jdbc.sql("SELECT " + COLUMNS + " FROM ratecard.exchange_quote WHERE quotation_at=:at AND buy_rate=:buy AND sell_rate=:sell")
+        return jdbc.sql("SELECT " + COLUMNS + " FROM pop_price_system_service.exchange_quote WHERE quotation_at=:at AND buy_rate=:buy AND sell_rate=:sell")
                 .param("at",java.sql.Timestamp.from(q.quotationAt())).param("buy",q.buyRate()).param("sell",q.sellRate()).query(mapper).single();
     }
-    public Optional<ExchangeQuote> find(UUID id) { return jdbc.sql("SELECT " + COLUMNS + " FROM ratecard.exchange_quote WHERE id=:id").param("id",id).query(mapper).optional(); }
-    public List<ExchangeQuote> list() { return jdbc.sql("SELECT " + COLUMNS + " FROM ratecard.exchange_quote ORDER BY quotation_at DESC,synchronized_at DESC,id LIMIT 100").query(mapper).list(); }
+    public Optional<ExchangeQuote> find(UUID id) { return jdbc.sql("SELECT " + COLUMNS + " FROM pop_price_system_service.exchange_quote WHERE id=:id").param("id",id).query(mapper).optional(); }
+    public List<ExchangeQuote> list() { return jdbc.sql("SELECT " + COLUMNS + " FROM pop_price_system_service.exchange_quote ORDER BY quotation_at DESC,synchronized_at DESC,id LIMIT 100").query(mapper).list(); }
 }

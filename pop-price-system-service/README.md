@@ -20,11 +20,13 @@ Os seeds permanecem separados por provedor em [`../pop-price-system-database/see
 
 Validação isolada do cadastro: `python ../pop-price-system-database/validation/portal_local.py verify-components`. O comando cria e preserva um banco exclusivo a partir do deploy consolidado para testar HTTP, constraints, paginação, edição concorrente e persistência após reiniciar a aplicação. Não altera os dados do banco local da aplicação.
 
-Biblioteca AWS completa: 810 ícones, 27 categorias e 769 componentes de serviço/recurso. Para importar no banco local com a estrutura atual, execute `python ../pop-price-system-database/validation/portal_local.py import-aws-components-local`: salva backup completo de ratecard em `../pop-price-system-database/target/`, aplica `../pop-price-system-database/seeds/aws.sql` em transação e verifica repetibilidade e preservação dos cadastros anteriores. `python ../pop-price-system-database/validation/portal_local.py verify-aws-components` testa a carga em banco isolado. Todos os componentes importados começam pendentes; os 137 mapeamentos revisados só vinculam códigos presentes no catálogo. A carga não sobrescreve edições nem completa vínculos de registros já existentes. Mais detalhes no [procedimento de importação](../pop-price-system-web/docs/IMPORTACAO_COMPONENTES_AWS.md).
+Biblioteca AWS completa: 810 ícones, 27 categorias e 769 componentes de serviço/recurso. Para importar no banco local com a estrutura atual, execute `python ../pop-price-system-database/validation/portal_local.py import-aws-components-local`: salva backup completo de pop_price_system_service em `../pop-price-system-database/target/`, aplica `../pop-price-system-database/seeds/aws.sql` em transação e verifica repetibilidade e preservação dos cadastros anteriores. `python ../pop-price-system-database/validation/portal_local.py verify-aws-components` testa a carga em banco isolado. Todos os componentes importados começam pendentes; os 137 mapeamentos revisados só vinculam códigos presentes no catálogo. A carga não sobrescreve edições nem completa vínculos de registros já existentes. Mais detalhes no [procedimento de importação](../pop-price-system-web/docs/IMPORTACAO_COMPONENTES_AWS.md).
 
 ## Executar
 
 Requisitos: Java 25, PostgreSQL e Maven Wrapper. O DDL foi conferido em PostgreSQL 18.6. Não são necessárias extensões no banco.
+
+O schema utilizado é `pop_price_system_service`, configurado também como padrão das conexões Hikari. Para bancos existentes com `ratecard`, siga a [migração do schema](../pop-price-system-database/README.md): pare o serviço, salve backup, renomeie o schema com `20261126_rename_application_schema.sql` e reinicie com esta versão. Essa migração precede as migrações de estruturas ainda pendentes. Banco, usuário e prefixos de configuração não precisam ser renomeados.
 
 1. Crie um banco vazio e uma conexão com permissão para criar o schema.
 2. Execute o script uma única vez no banco vazio (o script é transacional e não apaga objetos existentes):
@@ -36,8 +38,8 @@ psql "$DATABASE_URL_PSQL" -X -v ON_ERROR_STOP=1 -f ../pop-price-system-database/
 3. Configure a aplicação. Exemplo PowerShell:
 
 ```powershell
-$env:DATABASE_URL = 'jdbc:postgresql://localhost:5432/ratecard'
-$env:DATABASE_USER = 'ratecard'
+$env:DATABASE_URL = 'jdbc:postgresql://localhost:5432/pop_database_db'
+$env:DATABASE_USER = '<usuario do banco>'
 $env:DATABASE_PASSWORD = '<senha do banco>'
 $env:AWS_PROFILE = '<perfil local>'
 $env:SPRING_PROFILES_ACTIVE = 'dev'

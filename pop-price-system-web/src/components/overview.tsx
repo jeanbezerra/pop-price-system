@@ -198,11 +198,11 @@ export function Overview({ data }: { data: OverviewData }) {
         <CardFooter>
           <Button
             as="a"
-            href="/canvas"
+            href="/estruturas"
             appearance="primary"
             icon={<ArrowRightRegular />}
           >
-            Montar arquitetura
+            Gerir estruturas
           </Button>
           <Button as="a" href="/construtor/sincronizacoes">
             Preparar bases

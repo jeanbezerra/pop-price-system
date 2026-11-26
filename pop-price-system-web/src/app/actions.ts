@@ -21,6 +21,8 @@ import {
   getModels,
   getContracts,
   getValuations,
+  getStructures,
+  getModel,
 } from "@/lib/portal-api";
 import type {
   ArchitectureModel,
@@ -30,6 +32,8 @@ import type {
   Parameters,
   SaveModel,
   Valuation,
+  StructureSpecification,
+  StructureQuery,
 } from "@/lib/portal-contracts";
 import type {
   CatalogService,
@@ -138,6 +142,23 @@ export async function loadSynchronizationHistory(
 export async function loadModels(status: string, offset: number) {
   return getModels(status, offset);
 }
+export async function loadStructures(query: StructureQuery = {}) {
+  return getStructures(query);
+}
+export async function changeStructureLifecycle(
+  id: string,
+  revision: number,
+  action: "archive" | "unarchive" | "delete",
+) {
+  const result = await apiRequest<ArchitectureModel | null>(
+    `api/v1/architecture-models/${encodeURIComponent(id)}${action === "delete" ? `?revision=${revision}` : `/${action}`}`,
+    action === "delete"
+      ? { method: "DELETE" }
+      : { method: "POST", body: { revision } },
+  );
+  if (result.ok) revalidatePath("/estruturas");
+  return result;
+}
 export async function loadContracts(offset: number) {
   return getContracts(offset);
 }
@@ -156,10 +177,21 @@ export async function publishArchitecture(id: string, revision: number) {
     { method: "POST", body: { revision } },
   );
 }
-export async function duplicateArchitecture(id: string) {
+export async function loadArchitecture(id: string) {
+  return getModel(id);
+}
+export async function duplicateArchitecture(
+  id: string,
+  input?: {
+    name: string;
+    hoursPerMonth: number;
+    specification: StructureSpecification;
+    revision: number;
+  },
+) {
   return apiRequest<ArchitectureModel>(
     `api/v1/architecture-models/${encodeURIComponent(id)}/duplicate`,
-    { method: "POST" },
+    { method: "POST", ...(input ? { body: input } : {}) },
   );
 }
 export async function estimateArchitecture(

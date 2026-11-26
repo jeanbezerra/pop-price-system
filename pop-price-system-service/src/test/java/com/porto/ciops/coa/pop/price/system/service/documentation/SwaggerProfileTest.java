@@ -137,7 +137,7 @@ class SwaggerProfileTest {
                 }
             }
         }
-        assertThat(operations).isEqualTo(46);
+        assertThat(operations).isEqualTo(49);
         assertThat(document.path("paths").has("/api/v1/architecture-models/{id}/estimates")).isTrue();
         assertThat(document.path("paths").has("/api/v1/exchange-rates/synchronize")).isTrue();
         assertThat(document.path("paths").has("/api/v1/contracts")).isTrue();

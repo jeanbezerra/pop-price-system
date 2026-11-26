@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Card, Field, Input, Select } from "@fluentui/react-components";
 import type {
   ArchitectureEdge,
@@ -18,22 +18,43 @@ export function NodeProperties({
   rate,
   readOnly,
   onApply,
+  embedded = false,
 }: {
   node: ArchitectureNode;
   rate?: CatalogRate;
   readOnly: boolean;
   onApply: (node: ArchitectureNode) => void;
+  embedded?: boolean;
 }) {
   const styles = usePageStyles();
   const ui = usePortalStyles();
   const [draft, setDraft] = useState(node);
+  useEffect(() => {
+    setDraft((old) => ({
+      ...old,
+      rateId: node.rateId,
+      serviceCode: node.serviceCode,
+      provider: node.provider,
+      consumptionUnit: node.consumptionUnit,
+      period: node.period,
+    }));
+  }, [
+    node.rateId,
+    node.serviceCode,
+    node.provider,
+    node.consumptionUnit,
+    node.period,
+  ]);
+  const Surface = embedded ? "div" : Card;
   return (
-    <Card className={styles.card}>
-      <h2 className={ui.title}>Propriedades do componente</h2>
+    <Surface className={embedded ? ui.form : styles.card}>
+      {!embedded && <h2 className={ui.title}>Propriedades do componente</h2>}
       <p className={ui.muted}>
         {rate
           ? `${rate.serviceCode} · ${rate.regionCode} · ${money(rate.unitPrice, "USD")} por ${rate.unit}`
-          : `Tarifa vinculada: ${node.rateId}`}
+          : node.rateId
+            ? `Tarifa vinculada: ${node.rateId}`
+            : "Tarifa a definir. Configure o preço nas propriedades deste componente."}
       </p>
       <form
         className={ui.form}
@@ -176,7 +197,7 @@ export function NodeProperties({
           </div>
         )}
       </form>
-    </Card>
+    </Surface>
   );
 }
 
@@ -207,20 +228,23 @@ export function EdgeProperties({
   rates,
   readOnly,
   onApply,
+  embedded = false,
 }: {
   edge: ArchitectureEdge;
   rates: CatalogRate[];
   readOnly: boolean;
   onApply: (edge: ArchitectureEdge) => void;
+  embedded?: boolean;
 }) {
   const styles = usePageStyles();
   const ui = usePortalStyles();
   const [draft, setDraft] = useState(edge);
   const [key, setKey] = useState<ChargeKey>("DATA_OUT");
   const [rate, setRate] = useState("");
+  const Surface = embedded ? "div" : Card;
   return (
-    <Card className={styles.card}>
-      <h2 className={ui.title}>Consumo da ligação</h2>
+    <Surface className={embedded ? ui.form : styles.card}>
+      {!embedded && <h2 className={ui.title}>Consumo da ligação</h2>}
       <p className={ui.muted}>
         A ligação representa um fluxo de dados. O cálculo exige as tarifas de
         rede e as AZs compatíveis com o caminho; uma ligação desenhada não
@@ -367,6 +391,6 @@ export function EdgeProperties({
           </div>
         )}
       </form>
-    </Card>
+    </Surface>
   );
 }

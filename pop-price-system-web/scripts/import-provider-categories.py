@@ -49,7 +49,7 @@ for provider, url, expected_hash, release in SOURCES:
     statements = ["-- Generated from official package categories by scripts/import-provider-categories.py."]
     for entry in categories:
         values = [entry[key] for key in ('provider','code','name','originalName','sourceUrl','release','origin')]
-        statements.append("INSERT INTO ratecard.architecture_component_category(provider,code,name,original_name,source_url,release,origin) VALUES (" + ','.join(map(literal,values)) + ") ON CONFLICT (provider,code) DO NOTHING;")
+        statements.append("INSERT INTO pop_price_system_service.architecture_component_category(provider,code,name,original_name,source_url,release,origin) VALUES (" + ','.join(map(literal,values)) + ") ON CONFLICT (provider,code) DO NOTHING;")
     seed = ROOT.parent / ('pop-price-system-database/seeds/'+provider.lower()+'.sql')
     seed.parent.mkdir(parents=True, exist_ok=True)
     seed.write_text('\n'.join(statements)+'\n',encoding='utf-8',newline='\n')

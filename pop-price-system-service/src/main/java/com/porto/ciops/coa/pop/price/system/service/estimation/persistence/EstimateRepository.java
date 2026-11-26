@@ -27,7 +27,7 @@ public class EstimateRepository {
 
     public void create(UUID id, String name, BigDecimal hours) {
         jdbc.sql(
-                        "INSERT INTO ratecard.architecture_estimate(id,name,hours_per_month)"
+                        "INSERT INTO pop_price_system_service.architecture_estimate(id,name,hours_per_month)"
                                 + " VALUES(:id,:name,:hours)")
                 .param("id", id)
                 .param("name", name)
@@ -38,7 +38,7 @@ public class EstimateRepository {
     public Optional<Estimate> header(UUID id, boolean lock) {
         return jdbc.sql(
                         """
-                        SELECT id,name,hours_per_month,currency,revision,created_at,updated_at FROM ratecard.architecture_estimate WHERE id=:id
+                        SELECT id,name,hours_per_month,currency,revision,created_at,updated_at FROM pop_price_system_service.architecture_estimate WHERE id=:id
                         """
                                 + (lock ? " FOR UPDATE" : ""))
                 .param("id", id)
@@ -60,7 +60,7 @@ public class EstimateRepository {
     public List<Estimate> list(int size, int offset) {
         return jdbc.sql(
                         """
-                        SELECT id,name,hours_per_month,currency,revision,created_at,updated_at FROM ratecard.architecture_estimate
+                        SELECT id,name,hours_per_month,currency,revision,created_at,updated_at FROM pop_price_system_service.architecture_estimate
                          ORDER BY created_at DESC,id LIMIT :limit OFFSET :offset
                         """)
                 .param("limit", size + 1)
@@ -84,8 +84,8 @@ public class EstimateRepository {
         Map<UUID, List<Hop>> hops = new HashMap<>();
         jdbc.sql(
                         """
-                        SELECT h.item_id,h.service_code,h.account_code,h.region_code FROM ratecard.architecture_flow_hop h
-                        JOIN ratecard.architecture_estimate_item i ON i.id=h.item_id WHERE i.estimate_id=:id ORDER BY h.item_id,h.position
+                        SELECT h.item_id,h.service_code,h.account_code,h.region_code FROM pop_price_system_service.architecture_flow_hop h
+                        JOIN pop_price_system_service.architecture_estimate_item i ON i.id=h.item_id WHERE i.estimate_id=:id ORDER BY h.item_id,h.position
                         """)
                 .param("id", estimateId)
                 .query(
@@ -104,8 +104,8 @@ public class EstimateRepository {
         Map<UUID, List<Charge>> charges = new HashMap<>();
         jdbc.sql(
                         """
-                        SELECT c.item_id,c.charge_key,c.rate_id FROM ratecard.architecture_flow_charge c
-                        JOIN ratecard.architecture_estimate_item i ON i.id=c.item_id WHERE i.estimate_id=:id ORDER BY c.item_id,c.charge_key
+                        SELECT c.item_id,c.charge_key,c.rate_id FROM pop_price_system_service.architecture_flow_charge c
+                        JOIN pop_price_system_service.architecture_estimate_item i ON i.id=c.item_id WHERE i.estimate_id=:id ORDER BY c.item_id,c.charge_key
                         """)
                 .param("id", estimateId)
                 .query(
@@ -126,7 +126,7 @@ public class EstimateRepository {
                                i.consumption_period,i.retention_days,i.traffic_key,f.item_id AS flow_id,f.source_service,f.destination_service,
                                f.source_account,f.destination_account,f.source_region,f.destination_region,f.source_az,f.destination_az,
                                f.direction,f.connectivity
-                        FROM ratecard.architecture_estimate_item i LEFT JOIN ratecard.architecture_data_flow f ON f.item_id=i.id
+                        FROM pop_price_system_service.architecture_estimate_item i LEFT JOIN pop_price_system_service.architecture_data_flow f ON f.item_id=i.id
                         WHERE i.estimate_id=:id ORDER BY i.created_at,i.id
                         """)
                 .param("id", estimateId)
@@ -184,7 +184,7 @@ public class EstimateRepository {
         p.put("traffic", item.flow() == null ? null : item.flow().trafficKey());
         jdbc.sql(
                         """
-                        INSERT INTO ratecard.architecture_estimate_item(id,estimate_id,name,category,account_code,rate_id,quantity,
+                        INSERT INTO pop_price_system_service.architecture_estimate_item(id,estimate_id,name,category,account_code,rate_id,quantity,
                             consumption,consumption_unit,consumption_period,retention_days,traffic_key)
                         VALUES(:id,:estimate,:name,:category,:account,:rate,:quantity,:consumption,:unit,:period,:retention,:traffic)
                         """)
@@ -204,7 +204,7 @@ public class EstimateRepository {
             p.put("connectivity", f.connectivity().name());
             jdbc.sql(
                             """
-                            INSERT INTO ratecard.architecture_data_flow(item_id,source_service,destination_service,source_account,destination_account,
+                            INSERT INTO pop_price_system_service.architecture_data_flow(item_id,source_service,destination_service,source_account,destination_account,
                                 source_region,destination_region,source_az,destination_az,direction,connectivity)
                             VALUES(:id,:sourceService,:destinationService,:sourceAccount,:destinationAccount,:sourceRegion,:destinationRegion,
                                 :sourceAz,:destinationAz,:direction,:connectivity)
@@ -214,7 +214,7 @@ public class EstimateRepository {
             for (var charge : f.charges())
                 jdbc.sql(
                                 "INSERT INTO"
-                                    + " ratecard.architecture_flow_charge(item_id,charge_key,rate_id)"
+                                    + " pop_price_system_service.architecture_flow_charge(item_id,charge_key,rate_id)"
                                     + " VALUES(:id,:key,:rate)")
                         .param("id", item.id())
                         .param("key", charge.key().name())
@@ -224,7 +224,7 @@ public class EstimateRepository {
                 var hop = f.intermediaries().get(position);
                 jdbc.sql(
                                 """
-                                INSERT INTO ratecard.architecture_flow_hop(item_id,position,service_code,account_code,region_code)
+                                INSERT INTO pop_price_system_service.architecture_flow_hop(item_id,position,service_code,account_code,region_code)
                                 VALUES(:id,:position,:service,:account,:region)
                                 """)
                         .param("id", item.id())
@@ -241,7 +241,7 @@ public class EstimateRepository {
     public boolean delete(UUID estimate, UUID item) {
         boolean deleted =
                 jdbc.sql(
-                                        "DELETE FROM ratecard.architecture_estimate_item WHERE"
+                                        "DELETE FROM pop_price_system_service.architecture_estimate_item WHERE"
                                                 + " estimate_id=:estimate AND id=:item")
                                 .param("estimate", estimate)
                                 .param("item", item)
@@ -254,7 +254,7 @@ public class EstimateRepository {
     public void calculation(PricingResult result) {
         jdbc.sql(
                         """
-                        INSERT INTO ratecard.architecture_estimate_calculation(id,estimate_id,revision,snapshot,calculated_at)
+                        INSERT INTO pop_price_system_service.architecture_estimate_calculation(id,estimate_id,revision,snapshot,calculated_at)
                         VALUES(:id,:estimate,:revision,CAST(:snapshot AS jsonb),:calculated)
                         """)
                 .param("id", result.calculationId())
@@ -268,7 +268,7 @@ public class EstimateRepository {
     public Optional<PricingResult> lastCalculation(UUID id) {
         return jdbc.sql(
                         """
-                        SELECT snapshot::text FROM ratecard.architecture_estimate_calculation WHERE estimate_id=:id
+                        SELECT snapshot::text FROM pop_price_system_service.architecture_estimate_calculation WHERE estimate_id=:id
                         ORDER BY calculated_at DESC,id DESC LIMIT 1
                         """)
                 .param("id", id)
@@ -278,7 +278,7 @@ public class EstimateRepository {
 
     public Optional<PricingResult> calculation(UUID estimate, UUID calculation) {
         return jdbc.sql(
-                        "SELECT snapshot::text FROM ratecard.architecture_estimate_calculation"
+                        "SELECT snapshot::text FROM pop_price_system_service.architecture_estimate_calculation"
                                 + " WHERE estimate_id=:estimate AND id=:calculation")
                 .param("estimate", estimate)
                 .param("calculation", calculation)
@@ -288,7 +288,7 @@ public class EstimateRepository {
 
     private void bump(UUID id) {
         jdbc.sql(
-                        "UPDATE ratecard.architecture_estimate SET"
+                        "UPDATE pop_price_system_service.architecture_estimate SET"
                                 + " revision=revision+1,updated_at=now() WHERE id=:id")
                 .param("id", id)
                 .update();

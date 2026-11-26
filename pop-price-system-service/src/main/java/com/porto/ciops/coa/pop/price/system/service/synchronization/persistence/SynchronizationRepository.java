@@ -28,7 +28,7 @@ public class SynchronizationRepository {
     }
 
     public Optional<Synchronization> find(UUID id) {
-        return jdbc.sql("SELECT " + COLUMNS + " FROM ratecard.catalog_synchronization WHERE id=:id")
+        return jdbc.sql("SELECT " + COLUMNS + " FROM pop_price_system_service.catalog_synchronization WHERE id=:id")
                 .param("id", id)
                 .query(mapper())
                 .optional();
@@ -38,7 +38,7 @@ public class SynchronizationRepository {
         return jdbc.sql(
                         "SELECT "
                                 + COLUMNS
-                                + " FROM ratecard.catalog_synchronization WHERE"
+                                + " FROM pop_price_system_service.catalog_synchronization WHERE"
                                 + " idempotency_key=:key")
                 .param("key", key)
                 .query(mapper())
@@ -64,7 +64,7 @@ public class SynchronizationRepository {
         return jdbc.sql(
                         "SELECT "
                                 + COLUMNS
-                                + " FROM ratecard.catalog_synchronization ORDER BY " + column
+                                + " FROM pop_price_system_service.catalog_synchronization ORDER BY " + column
                                 + " " + order + (sortBy.equals("startedAt") ? "" : ",started_at DESC")
                                 + ",id ASC LIMIT :limit OFFSET :offset")
                 .param("limit", size + 1)
@@ -82,7 +82,7 @@ public class SynchronizationRepository {
         // id and state.
         jdbc.sql(
                         """
-                        UPDATE ratecard.catalog_synchronization SET status='FAILED',error_code='REQUEST_INTERRUPTED',finished_at=now()
+                        UPDATE pop_price_system_service.catalog_synchronization SET status='FAILED',error_code='REQUEST_INTERRUPTED',finished_at=now()
                          WHERE provider=:provider AND service_code=:service AND region_code=:region AND status='RUNNING'
                            AND heartbeat_at < now()-make_interval(secs => :stale)
                         """)
@@ -90,7 +90,7 @@ public class SynchronizationRepository {
                 .update();
         jdbc.sql(
                         """
-                        DELETE FROM ratecard.catalog_stage_rate s USING ratecard.catalog_synchronization r
+                        DELETE FROM pop_price_system_service.catalog_stage_rate s USING pop_price_system_service.catalog_synchronization r
                          WHERE s.synchronization_id=r.id AND r.provider=:provider AND r.service_code=:service
                            AND r.region_code=:region AND r.status='FAILED'
                         """)
@@ -98,7 +98,7 @@ public class SynchronizationRepository {
                 .update();
         jdbc.sql(
                         """
-                        DELETE FROM ratecard.catalog_stage_product s USING ratecard.catalog_synchronization r
+                        DELETE FROM pop_price_system_service.catalog_stage_product s USING pop_price_system_service.catalog_synchronization r
                          WHERE s.synchronization_id=r.id AND r.provider=:provider AND r.service_code=:service
                            AND r.region_code=:region AND r.status='FAILED'
                         """)
@@ -106,7 +106,7 @@ public class SynchronizationRepository {
                 .update();
         return jdbc.sql(
                                 """
-                                INSERT INTO ratecard.catalog_synchronization(id,provider,service_code,region_code,status,idempotency_key,attempt)
+                                INSERT INTO pop_price_system_service.catalog_synchronization(id,provider,service_code,region_code,status,idempotency_key,attempt)
                                 VALUES (:id,:provider,:service,:region,'RUNNING',:key,:attempt) ON CONFLICT DO NOTHING
                                 """)
                         .params(p)
@@ -116,7 +116,7 @@ public class SynchronizationRepository {
 
     public String checkpoint(Scope scope) {
         return jdbc.sql(
-                        "SELECT source_version FROM ratecard.catalog_sync_checkpoint WHERE"
+                        "SELECT source_version FROM pop_price_system_service.catalog_sync_checkpoint WHERE"
                                 + " provider=:provider AND service_code=:service AND"
                                 + " region_code=:region")
                 .params(params(null, scope))
@@ -127,7 +127,7 @@ public class SynchronizationRepository {
 
     public void heartbeat(UUID id) {
         if (jdbc.sql(
-                                "UPDATE ratecard.catalog_synchronization SET heartbeat_at=now()"
+                                "UPDATE pop_price_system_service.catalog_synchronization SET heartbeat_at=now()"
                                         + " WHERE id=:id AND status='RUNNING'")
                         .param("id", id)
                         .update()
@@ -151,7 +151,7 @@ public class SynchronizationRepository {
         if (rows.length == 0) return;
         batch.batchUpdate(
                 """
-                INSERT INTO ratecard.catalog_stage_product(synchronization_id,sku,family,attributes,usage_type,operation,content_hash)
+                INSERT INTO pop_price_system_service.catalog_stage_product(synchronization_id,sku,family,attributes,usage_type,operation,content_hash)
                 VALUES(:id,:sku,:family,CAST(:attrs AS jsonb),:usage,:operation,:hash)
                 ON CONFLICT(synchronization_id,sku) DO UPDATE SET family=excluded.family,attributes=excluded.attributes,
                     usage_type=excluded.usage_type,operation=excluded.operation,content_hash=excluded.content_hash
@@ -186,7 +186,7 @@ public class SynchronizationRepository {
         if (rows.length == 0) return;
         batch.batchUpdate(
                 """
-                INSERT INTO ratecard.catalog_stage_rate(synchronization_id,sku,term_code,modality,term_attributes,rate_code,currency,
+                INSERT INTO pop_price_system_service.catalog_stage_rate(synchronization_id,sku,term_code,modality,term_attributes,rate_code,currency,
                     unit,description,range_begin,range_end,unit_price,effective_at,applies_to,content_hash)
                 VALUES(:id,:sku,:term,:modality,CAST(:attrs AS jsonb),:code,:currency,:unit,:description,:begin,:end,:price,:effective,CAST(:applies AS jsonb),:hash)
                 ON CONFLICT(synchronization_id,sku,term_code,modality,rate_code,currency) DO UPDATE SET
@@ -205,7 +205,7 @@ public class SynchronizationRepository {
         long orphan =
                 jdbc.sql(
                                 """
-                                SELECT count(*) FROM ratecard.catalog_stage_rate r LEFT JOIN ratecard.catalog_stage_product p
+                                SELECT count(*) FROM pop_price_system_service.catalog_stage_rate r LEFT JOIN pop_price_system_service.catalog_stage_product p
                                   ON p.synchronization_id=r.synchronization_id AND p.sku=r.sku
                                  WHERE r.synchronization_id=:id AND p.sku IS NULL
                                 """)
@@ -214,7 +214,7 @@ public class SynchronizationRepository {
                         .single();
         long count =
                 jdbc.sql(
-                                "SELECT count(*) FROM ratecard.catalog_stage_rate WHERE"
+                                "SELECT count(*) FROM pop_price_system_service.catalog_stage_rate WHERE"
                                         + " synchronization_id=:id")
                         .param("id", id)
                         .query(Long.class)
@@ -223,9 +223,9 @@ public class SynchronizationRepository {
             throw new IllegalArgumentException("Incomplete catalog staging");
         jdbc.sql(
                         """
-                        INSERT INTO ratecard.cloud_product(provider,service_code,region_code,sku,family,attributes,usage_type,operation,content_hash)
+                        INSERT INTO pop_price_system_service.cloud_product(provider,service_code,region_code,sku,family,attributes,usage_type,operation,content_hash)
                         SELECT :provider,:service,:region,sku,family,attributes,usage_type,operation,content_hash
-                          FROM ratecard.catalog_stage_product WHERE synchronization_id=:id
+                          FROM pop_price_system_service.catalog_stage_product WHERE synchronization_id=:id
                         ON CONFLICT(provider,service_code,region_code,sku) DO UPDATE SET family=excluded.family,
                             attributes=excluded.attributes,usage_type=excluded.usage_type,operation=excluded.operation,
                             content_hash=excluded.content_hash,active=true
@@ -235,9 +235,9 @@ public class SynchronizationRepository {
                 .update();
         jdbc.sql(
                         """
-                        INSERT INTO ratecard.price_term(product_id,term_code,modality,attributes)
-                        SELECT DISTINCT p.id,r.term_code,r.modality,r.term_attributes FROM ratecard.catalog_stage_rate r
-                        JOIN ratecard.cloud_product p ON p.provider=:provider AND p.service_code=:service AND p.region_code=:region AND p.sku=r.sku
+                        INSERT INTO pop_price_system_service.price_term(product_id,term_code,modality,attributes)
+                        SELECT DISTINCT p.id,r.term_code,r.modality,r.term_attributes FROM pop_price_system_service.catalog_stage_rate r
+                        JOIN pop_price_system_service.cloud_product p ON p.provider=:provider AND p.service_code=:service AND p.region_code=:region AND p.sku=r.sku
                          WHERE r.synchronization_id=:id
                         ON CONFLICT(product_id,term_code,modality) DO UPDATE SET attributes=excluded.attributes
                          WHERE price_term.attributes IS DISTINCT FROM excluded.attributes
@@ -249,21 +249,21 @@ public class SynchronizationRepository {
         jdbc.sql(
                         """
                         WITH changed AS (
-                          INSERT INTO ratecard.price_dimension(term_id,rate_code,currency,unit,description,range_begin,range_end,
+                          INSERT INTO pop_price_system_service.price_dimension(term_id,rate_code,currency,unit,description,range_begin,range_end,
                               unit_price,effective_at,applies_to,content_hash,active)
                           SELECT t.id,r.rate_code,r.currency,r.unit,r.description,r.range_begin,r.range_end,r.unit_price,
                                  r.effective_at,r.applies_to,md5(r.content_hash || p.content_hash),true
-                            FROM ratecard.catalog_stage_rate r JOIN ratecard.cloud_product p
+                            FROM pop_price_system_service.catalog_stage_rate r JOIN pop_price_system_service.cloud_product p
                               ON p.provider=:provider AND p.service_code=:service AND p.region_code=:region AND p.sku=r.sku
-                            JOIN ratecard.price_term t ON t.product_id=p.id AND t.term_code=r.term_code AND t.modality=r.modality
+                            JOIN pop_price_system_service.price_term t ON t.product_id=p.id AND t.term_code=r.term_code AND t.modality=r.modality
                            WHERE r.synchronization_id=:id
                           ON CONFLICT(term_id,rate_code,currency) DO UPDATE SET unit=excluded.unit,description=excluded.description,
                               range_begin=excluded.range_begin,range_end=excluded.range_end,unit_price=excluded.unit_price,
                               effective_at=excluded.effective_at,applies_to=excluded.applies_to,content_hash=excluded.content_hash,active=true
                            WHERE price_dimension.content_hash<>excluded.content_hash OR NOT price_dimension.active
                           RETURNING id
-                        ) INSERT INTO ratecard.catalog_change_history(synchronization_id,dimension_id,change_type)
-                          SELECT :id,c.id,CASE WHEN EXISTS(SELECT 1 FROM ratecard.price_version v WHERE v.dimension_id=c.id)
+                        ) INSERT INTO pop_price_system_service.catalog_change_history(synchronization_id,dimension_id,change_type)
+                          SELECT :id,c.id,CASE WHEN EXISTS(SELECT 1 FROM pop_price_system_service.price_version v WHERE v.dimension_id=c.id)
                                               THEN 'UPDATED' ELSE 'INSERTED' END FROM changed c
                         """)
                 .params(p)
@@ -273,50 +273,50 @@ public class SynchronizationRepository {
         jdbc.sql(
                         """
                         WITH removed AS (
-                          UPDATE ratecard.price_dimension d SET active=false FROM ratecard.price_term t,ratecard.cloud_product p
+                          UPDATE pop_price_system_service.price_dimension d SET active=false FROM pop_price_system_service.price_term t,pop_price_system_service.cloud_product p
                            WHERE d.term_id=t.id AND t.product_id=p.id AND p.provider=:provider AND p.service_code=:service
                              AND p.region_code=:region AND d.active AND t.modality='OnDemand' AND d.currency='USD' AND NOT EXISTS (
-                               SELECT 1 FROM ratecard.catalog_stage_rate r WHERE r.synchronization_id=:id AND r.sku=p.sku
+                               SELECT 1 FROM pop_price_system_service.catalog_stage_rate r WHERE r.synchronization_id=:id AND r.sku=p.sku
                                 AND r.term_code=t.term_code AND r.modality=t.modality AND r.rate_code=d.rate_code AND r.currency=d.currency)
                           RETURNING d.id
-                        ) INSERT INTO ratecard.catalog_change_history(synchronization_id,dimension_id,change_type)
+                        ) INSERT INTO pop_price_system_service.catalog_change_history(synchronization_id,dimension_id,change_type)
                           SELECT :id,id,'DEACTIVATED' FROM removed
                         """)
                 .params(p)
                 .update();
         jdbc.sql(
                         """
-                        UPDATE ratecard.price_version v SET valid_to=now() WHERE v.valid_to IS NULL AND EXISTS (
-                          SELECT 1 FROM ratecard.catalog_change_history h WHERE h.synchronization_id=:id AND h.dimension_id=v.dimension_id)
+                        UPDATE pop_price_system_service.price_version v SET valid_to=now() WHERE v.valid_to IS NULL AND EXISTS (
+                          SELECT 1 FROM pop_price_system_service.catalog_change_history h WHERE h.synchronization_id=:id AND h.dimension_id=v.dimension_id)
                         """)
                 .params(p)
                 .update();
         jdbc.sql(
                         """
-                        INSERT INTO ratecard.price_version(dimension_id,source_version,source_url,content_hash,snapshot,valid_from)
+                        INSERT INTO pop_price_system_service.price_version(dimension_id,source_version,source_url,content_hash,snapshot,valid_from)
                         SELECT d.id,:version,:url,d.content_hash,
                           jsonb_build_object('provider',p.provider,'serviceCode',p.service_code,'regionCode',p.region_code,'sku',p.sku,
                             'family',p.family,'attributes',p.attributes,'modality',t.modality,'termCode',t.term_code,
                             'termAttributes',t.attributes,'rateCode',d.rate_code,'unit',d.unit,'currency',d.currency,
                             'unitPrice',d.unit_price,'rangeBegin',d.range_begin,'rangeEnd',d.range_end,'effectiveAt',d.effective_at,
                             'description',d.description,'appliesTo',d.applies_to),now()
-                          FROM ratecard.catalog_change_history h JOIN ratecard.price_dimension d ON d.id=h.dimension_id
-                          JOIN ratecard.price_term t ON t.id=d.term_id JOIN ratecard.cloud_product p ON p.id=t.product_id
+                          FROM pop_price_system_service.catalog_change_history h JOIN pop_price_system_service.price_dimension d ON d.id=h.dimension_id
+                          JOIN pop_price_system_service.price_term t ON t.id=d.term_id JOIN pop_price_system_service.cloud_product p ON p.id=t.product_id
                          WHERE h.synchronization_id=:id AND h.change_type<>'DEACTIVATED'
                         """)
                 .params(p)
                 .update();
         jdbc.sql(
                         """
-                        UPDATE ratecard.cloud_product p SET active=false WHERE provider=:provider AND service_code=:service
+                        UPDATE pop_price_system_service.cloud_product p SET active=false WHERE provider=:provider AND service_code=:service
                           AND region_code=:region AND active AND NOT EXISTS (
-                            SELECT 1 FROM ratecard.catalog_stage_product s WHERE s.synchronization_id=:id AND s.sku=p.sku)
+                            SELECT 1 FROM pop_price_system_service.catalog_stage_product s WHERE s.synchronization_id=:id AND s.sku=p.sku)
                         """)
                 .params(p)
                 .update();
         jdbc.sql(
                         """
-                        INSERT INTO ratecard.catalog_sync_checkpoint(provider,service_code,region_code,source_version,source_url,synchronized_at,synchronization_id)
+                        INSERT INTO pop_price_system_service.catalog_sync_checkpoint(provider,service_code,region_code,source_version,source_url,synchronized_at,synchronization_id)
                         VALUES(:provider,:service,:region,:version,:url,now(),:id)
                         ON CONFLICT(provider,service_code,region_code) DO UPDATE SET source_version=excluded.source_version,
                           source_url=excluded.source_url,synchronized_at=excluded.synchronized_at,synchronization_id=excluded.synchronization_id
@@ -325,17 +325,17 @@ public class SynchronizationRepository {
                 .update();
         jdbc.sql(
                         """
-                        UPDATE ratecard.catalog_synchronization SET status='COMPLETED',finished_at=now(),source_version=:version,
-                          processed=(SELECT count(*) FROM ratecard.catalog_stage_rate WHERE synchronization_id=:id),
-                          inserted=(SELECT count(*) FROM ratecard.catalog_change_history WHERE synchronization_id=:id AND change_type='INSERTED'),
-                          updated=(SELECT count(*) FROM ratecard.catalog_change_history WHERE synchronization_id=:id AND change_type='UPDATED'),
-                          deactivated=(SELECT count(*) FROM ratecard.catalog_change_history WHERE synchronization_id=:id AND change_type='DEACTIVATED')
+                        UPDATE pop_price_system_service.catalog_synchronization SET status='COMPLETED',finished_at=now(),source_version=:version,
+                          processed=(SELECT count(*) FROM pop_price_system_service.catalog_stage_rate WHERE synchronization_id=:id),
+                          inserted=(SELECT count(*) FROM pop_price_system_service.catalog_change_history WHERE synchronization_id=:id AND change_type='INSERTED'),
+                          updated=(SELECT count(*) FROM pop_price_system_service.catalog_change_history WHERE synchronization_id=:id AND change_type='UPDATED'),
+                          deactivated=(SELECT count(*) FROM pop_price_system_service.catalog_change_history WHERE synchronization_id=:id AND change_type='DEACTIVATED')
                          WHERE id=:id
                         """)
                 .params(p)
                 .update();
         jdbc.sql(
-                        "UPDATE ratecard.catalog_synchronization SET"
+                        "UPDATE pop_price_system_service.catalog_synchronization SET"
                                 + " unchanged=processed-inserted-updated WHERE id=:id")
                 .params(p)
                 .update();
@@ -345,7 +345,7 @@ public class SynchronizationRepository {
     public void unchanged(UUID id, String version) {
         guard(id);
         jdbc.sql(
-                        "UPDATE ratecard.catalog_synchronization SET"
+                        "UPDATE pop_price_system_service.catalog_synchronization SET"
                             + " status='COMPLETED',finished_at=now(),source_version=:version WHERE"
                             + " id=:id")
                 .param("id", id)
@@ -355,7 +355,7 @@ public class SynchronizationRepository {
 
     public void fail(UUID id, String code) {
         jdbc.sql(
-                        "UPDATE ratecard.catalog_synchronization SET"
+                        "UPDATE pop_price_system_service.catalog_synchronization SET"
                             + " status='FAILED',finished_at=now(),error_code=:code WHERE id=:id AND"
                             + " status='RUNNING'")
                 .param("id", id)
@@ -365,10 +365,10 @@ public class SynchronizationRepository {
     }
 
     public void clean(UUID id) {
-        jdbc.sql("DELETE FROM ratecard.catalog_stage_rate WHERE synchronization_id=:id")
+        jdbc.sql("DELETE FROM pop_price_system_service.catalog_stage_rate WHERE synchronization_id=:id")
                 .param("id", id)
                 .update();
-        jdbc.sql("DELETE FROM ratecard.catalog_stage_product WHERE synchronization_id=:id")
+        jdbc.sql("DELETE FROM pop_price_system_service.catalog_stage_product WHERE synchronization_id=:id")
                 .param("id", id)
                 .update();
     }
@@ -376,7 +376,7 @@ public class SynchronizationRepository {
     private void guard(UUID id) {
         var status =
                 jdbc.sql(
-                                "SELECT status FROM ratecard.catalog_synchronization WHERE id=:id"
+                                "SELECT status FROM pop_price_system_service.catalog_synchronization WHERE id=:id"
                                         + " FOR UPDATE")
                         .param("id", id)
                         .query(String.class)

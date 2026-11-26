@@ -35,12 +35,13 @@ def verify_deploy(root, env, run_pg, executable):
     database = create_database("data")
     print("Validando deploy no banco isolado: " + database, flush=True)
     apply(root / "deploy.sql")
-    tables = query("SELECT tablename FROM pg_tables WHERE schemaname='ratecard' ORDER BY tablename").splitlines()
+    assert query("SELECT current_schema()") == "pop_price_system_service", "Unexpected default schema"
+    tables = query("SELECT tablename FROM pg_tables WHERE schemaname='pop_price_system_service' ORDER BY tablename").splitlines()
     assert len(tables) == 27, f"Unexpected tables: {tables}"
 
     def snapshot():
         return {table: json.loads(query(
-            f"SELECT COALESCE(jsonb_agg(to_jsonb(r) ORDER BY to_jsonb(r)::text),'[]') FROM ratecard.{table} r"))
+            f"SELECT COALESCE(jsonb_agg(to_jsonb(r) ORDER BY to_jsonb(r)::text),'[]') FROM pop_price_system_service.{table} r"))
             for table in tables}
 
     seeded = snapshot()
@@ -58,21 +59,21 @@ def verify_deploy(root, env, run_pg, executable):
     apply(Path(__file__).resolve().parent / "sql/deploy_structure.sql")
     populated = snapshot()
     assert all(populated.values()), "At least one table has no valid inserted data"
-    assert query("""SELECT count(*) FROM ratecard.customer_contract c
-        JOIN ratecard.estimate_valuation v ON v.id=c.valuation_id
-        JOIN ratecard.architecture_estimate_calculation x ON x.id=v.calculation_id AND x.estimate_id=v.estimate_id
-        JOIN ratecard.architecture_estimate e ON e.id=v.estimate_id
-        JOIN ratecard.architecture_model m ON m.id=v.model_id
-        JOIN ratecard.exchange_quote q ON q.id=v.quote_id
+    assert query("""SELECT count(*) FROM pop_price_system_service.customer_contract c
+        JOIN pop_price_system_service.estimate_valuation v ON v.id=c.valuation_id
+        JOIN pop_price_system_service.architecture_estimate_calculation x ON x.id=v.calculation_id AND x.estimate_id=v.estimate_id
+        JOIN pop_price_system_service.architecture_estimate e ON e.id=v.estimate_id
+        JOIN pop_price_system_service.architecture_model m ON m.id=v.model_id
+        JOIN pop_price_system_service.exchange_quote q ON q.id=v.quote_id
         WHERE c.reference='DEPLOY-TEST-CONTRACT' AND q.sell_rate=5.11
           AND (v.snapshot->>'totalBrl')::numeric=735.84""") == "1"
-    assert query("""SELECT count(*) FROM ratecard.architecture_estimate_item i
-        JOIN ratecard.architecture_data_flow f ON f.item_id=i.id
-        JOIN ratecard.architecture_flow_charge c ON c.item_id=f.item_id
-        JOIN ratecard.architecture_flow_hop h ON h.item_id=f.item_id
-        JOIN ratecard.price_dimension d ON d.id=c.rate_id AND d.id=i.rate_id
-        JOIN ratecard.price_term t ON t.id=d.term_id
-        JOIN ratecard.cloud_product p ON p.id=t.product_id
+    assert query("""SELECT count(*) FROM pop_price_system_service.architecture_estimate_item i
+        JOIN pop_price_system_service.architecture_data_flow f ON f.item_id=i.id
+        JOIN pop_price_system_service.architecture_flow_charge c ON c.item_id=f.item_id
+        JOIN pop_price_system_service.architecture_flow_hop h ON h.item_id=f.item_id
+        JOIN pop_price_system_service.price_dimension d ON d.id=c.rate_id AND d.id=i.rate_id
+        JOIN pop_price_system_service.price_term t ON t.id=d.term_id
+        JOIN pop_price_system_service.cloud_product p ON p.id=t.product_id
         WHERE p.sku='PORTAL-TEST-SKU'""") == "1"
 
     def literal(value):
@@ -87,7 +88,7 @@ def verify_deploy(root, env, run_pg, executable):
         return "'" + value.replace("'", "''") + "'"
 
     def insert(table, row):
-        return f"INSERT INTO ratecard.{table}({','.join(row)}) VALUES ({','.join(literal(v) for v in row.values())})"
+        return f"INSERT INTO pop_price_system_service.{table}({','.join(row)}) VALUES ({','.join(literal(v) for v in row.values())})"
 
     cases = []
 
@@ -187,14 +188,37 @@ def verify_deploy(root, env, run_pg, executable):
             sql = sql.replace(f"\\ir seeds/{provider}.sql", "\\ir '" + (root / f"seeds/{provider}.sql").as_posix() + "'")
         failed_deploy.write_text(sql.replace("COMMIT;", "SELECT 1/0;\nCOMMIT;"), encoding="utf-8")
         expect_error("atomic deployment rollback", "22012", "-f", str(failed_deploy))
-    assert query("SELECT count(*) FROM pg_namespace WHERE nspname='ratecard'") == "0", "Partial schema survived failed deployment"
+    assert query("SELECT count(*) FROM pg_namespace WHERE nspname='pop_price_system_service'") == "0", "Partial schema survived failed deployment"
 
+    env["PGDATABASE"] = database
+    migration = root / "migrations/20261126_rename_application_schema.sql"
+    relation_oids = query("SELECT jsonb_agg(jsonb_build_array(c.oid,c.relname,c.relkind,c.relowner,c.relacl) ORDER BY c.oid) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='pop_price_system_service'")
+    schema_oid = query("SELECT oid FROM pg_namespace WHERE nspname='pop_price_system_service'")
+    query("ALTER SCHEMA pop_price_system_service RENAME TO ratecard")
+    query("DO $$ BEGIN EXECUTE format('ALTER DATABASE %I SET search_path TO ratecard, public',current_database()); END $$")
+    assert query("SELECT count(*) FROM pg_namespace WHERE nspname='ratecard'") == "1"
+    for _ in range(2):
+        apply(migration)
+        assert populated == snapshot(), "Schema rename changed persisted data"
+        assert query("SELECT oid FROM pg_namespace WHERE nspname='pop_price_system_service'") == schema_oid
+        assert query("SELECT jsonb_agg(jsonb_build_array(c.oid,c.relname,c.relkind,c.relowner,c.relacl) ORDER BY c.oid) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='pop_price_system_service'") == relation_oids
+        assert query("SELECT current_schema()") == "pop_price_system_service"
+        assert query("SELECT count(*) FROM cloud_provider") == str(len(populated["cloud_provider"]))
+        assert query("SELECT count(*) FROM pg_namespace WHERE nspname='ratecard'") == "0"
+    query("CREATE SCHEMA ratecard")
+    expect_error("schema rename conflict", "P0001", "-f", str(migration))
+    assert populated == snapshot(), "Conflicting migration changed data"
+    query("DROP SCHEMA ratecard")
+    env["PGDATABASE"] = failed_database
+    expect_error("schema rename missing source", "P0001", "-f", str(migration))
     env["PGDATABASE"] = database
     report = dict(database=database, rollback_database=failed_database,
                   server_version=query("SELECT version()"), tables=len(tables),
                   valid_rows={table: len(rows) for table, rows in populated.items()},
                   rejected_insertions=len(cases), categories=categories, seeded_icons=810, seeded_components=769,
-                  seed_repetitions=2, atomic_rollback=True, existing_database_preserved=True)
+                  seed_repetitions=2, atomic_rollback=True, existing_database_preserved=True,
+                  schema_rename_preserves_data_and_oids=True, schema_rename_repeatable=True,
+                  schema_rename_rejects_conflicts=True, default_schema="pop_price_system_service")
     destination = root / "target/deploy-verification.json"
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

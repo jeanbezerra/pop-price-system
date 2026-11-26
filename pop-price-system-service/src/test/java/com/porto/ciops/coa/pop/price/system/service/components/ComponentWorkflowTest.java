@@ -60,9 +60,9 @@ class ComponentWorkflowTest {
         try (var http = HttpClient.newHttpClient(); var context = start()) {
             client = http;
             var jdbc = context.getBean(JdbcClient.class);
-            jdbc.sql("INSERT INTO ratecard.cloud_service(provider,code,name) VALUES ('AWS','AmazonEC2','Amazon EC2') ON CONFLICT DO NOTHING").update();
-            jdbc.sql("INSERT INTO ratecard.cloud_provider(code,name) VALUES ('AZURE','Microsoft Azure') ON CONFLICT DO NOTHING").update();
-            jdbc.sql("INSERT INTO ratecard.cloud_service(provider,code,name) VALUES ('AZURE','Compute','Azure Compute') ON CONFLICT DO NOTHING").update();
+            jdbc.sql("INSERT INTO pop_price_system_service.cloud_service(provider,code,name) VALUES ('AWS','AmazonEC2','Amazon EC2') ON CONFLICT DO NOTHING").update();
+            jdbc.sql("INSERT INTO pop_price_system_service.cloud_provider(code,name) VALUES ('AZURE','Microsoft Azure') ON CONFLICT DO NOTHING").update();
+            jdbc.sql("INSERT INTO pop_price_system_service.cloud_service(provider,code,name) VALUES ('AZURE','Compute','Azure Compute') ON CONFLICT DO NOTHING").update();
             var icons = call("GET", "/architecture-icons?provider=AWS&query=EC2&size=1", null, 200);
             assertThat(icons.at("/items/0/key").asString()).isEqualTo("aws.ec2");
             var firstPage = call("GET", "/architecture-icons?provider=AWS&size=1", null, 200);
@@ -94,12 +94,12 @@ class ComponentWorkflowTest {
             assertThat(call("GET", "/architecture-components?query=gerenciado&provider=AWS&service=AmazonEC2&status=ACTIVE", null, 200).path("items").size()).isEqualTo(1);
             assertThat(call("GET", "/architecture-components?status=PENDING&query=gerenciado", null, 200).path("items").size()).isZero();
             assertThat(call("GET", "/architecture-components?category=Other", null, 200).path("items").size()).isZero();
-            jdbc.sql("UPDATE ratecard.architecture_component SET category='Legacy category' WHERE id=CAST(:id AS uuid)").param("id",id).update();
+            jdbc.sql("UPDATE pop_price_system_service.architecture_component SET category='Legacy category' WHERE id=CAST(:id AS uuid)").param("id",id).update();
             draft.put("category","Legacy category");
             call("POST", "/architecture-components", draft, 422);
             draft.put("name", "Servidor editado"); draft.put("status", "INACTIVE"); draft.put("revision", 1);
             call("PUT", "/architecture-components/" + id, draft, 200);
-            assertThatThrownBy(() -> jdbc.sql("UPDATE ratecard.architecture_component SET provider='AZURE',service_code='Compute' WHERE id=CAST(:id AS uuid)").param("id", id).update())
+            assertThatThrownBy(() -> jdbc.sql("UPDATE pop_price_system_service.architecture_component SET provider='AZURE',service_code='Compute' WHERE id=CAST(:id AS uuid)").param("id", id).update())
                     .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
             var providers = call("GET", "/architecture-component-providers", null, 200);
             assertThat(providers.valueStream().map(p -> p.path("code").asString()).toList()).contains("GENERIC","AWS","AZURE","GCP");
@@ -161,7 +161,7 @@ class ComponentWorkflowTest {
             call("PUT", "/architecture-components/" + deletedId, removable, 404);
             call("DELETE", "/architecture-components/" + deletedId + "?revision=1", null, 404);
             assertThat(components("&query=remov%C3%ADvel")).isEmpty();
-            var retained = jdbc.sql("SELECT name,status,revision,characteristics::text,deleted_at IS NOT NULL AS deleted FROM ratecard.architecture_component WHERE id=CAST(:id AS uuid)")
+            var retained = jdbc.sql("SELECT name,status,revision,characteristics::text,deleted_at IS NOT NULL AS deleted FROM pop_price_system_service.architecture_component WHERE id=CAST(:id AS uuid)")
                     .param("id",deletedId).query().singleRow();
             assertThat(retained).containsEntry("name","Componente removível").containsEntry("status","ACTIVE").containsEntry("revision",1L).containsEntry("deleted",true);
             assertThat(retained.get("characteristics").toString()).contains("Purpose","Retain");

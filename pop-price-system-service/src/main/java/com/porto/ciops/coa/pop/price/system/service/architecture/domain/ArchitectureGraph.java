@@ -7,9 +7,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 /** Portable graph document. UI-library internals are never persisted. */
 public record ArchitectureGraph(List<Node> nodes, List<Edge> edges) {
-    public record Node(UUID id,String name,double x,double y,long rateId,String category,
+    public record Node(UUID id,String name,double x,double y,Long rateId,String category,
             String accountCode,@JsonFormat(shape=JsonFormat.Shape.STRING) BigDecimal quantity,@JsonFormat(shape=JsonFormat.Shape.STRING) BigDecimal consumption,String consumptionUnit,
-            Period period,Integer retentionDays,String availabilityZone) {}
+            Period period,Integer retentionDays,String availabilityZone,String provider,String serviceCode,String iconKey,String iconRelease,String iconAssetPath) {}
     public record Edge(UUID id,UUID source,UUID target,@JsonFormat(shape=JsonFormat.Shape.STRING) BigDecimal monthlyGb,Direction direction,
             Connectivity connectivity,List<Charge> charges) {}
 
@@ -19,8 +19,14 @@ public record ArchitectureGraph(List<Node> nodes, List<Edge> edges) {
         for(var n:nodes) {
             if(n==null||n.id()==null||!ids.add(n.id())) throw new IllegalArgumentException("Componentes precisam de identificadores únicos.");
             text(n.name(),200,"Nome");text(n.category(),100,"Categoria");text(n.accountCode(),100,"Conta");text(n.consumptionUnit(),40,"Unidade");
-            if(!Double.isFinite(n.x())||!Double.isFinite(n.y())||Math.abs(n.x())>100000||Math.abs(n.y())>100000||n.rateId()<=0||n.period()==null)
+            if(!Double.isFinite(n.x())||!Double.isFinite(n.y())||Math.abs(n.x())>100000||Math.abs(n.y())>100000||(n.rateId()!=null&&n.rateId()<=0)||n.period()==null)
                 throw new IllegalArgumentException("Posição, tarifa ou período de componente inválido.");
+            if(n.rateId()==null&&(n.provider()==null||!Set.of("AWS","AZURE","GCP","GENERIC").contains(n.provider())))
+                throw new IllegalArgumentException("Informe a cloud do componente sem tarifa.");
+            if(n.serviceCode()!=null&&n.serviceCode().length()>200||n.iconKey()!=null&&n.iconKey().length()>200||n.iconRelease()!=null&&n.iconRelease().length()>20)
+                throw new IllegalArgumentException("Referência de componente inválida.");
+            if(n.iconAssetPath()!=null&&!n.iconAssetPath().matches("/architecture-icons/[a-z0-9-]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/[a-z0-9-]+\\.svg"))
+                throw new IllegalArgumentException("Ícone de componente inválido.");
             decimal(n.quantity(),true,12,12);decimal(n.consumption(),false,18,12);
             if(n.availabilityZone()!=null&&n.availabilityZone().length()>100) throw new IllegalArgumentException("AZ inválida.");
             if(n.retentionDays()!=null&&(n.retentionDays()<1||n.retentionDays()>36500||n.period()!=Period.DAY))

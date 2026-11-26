@@ -9,16 +9,19 @@ export function PageFrame({
   children,
   route,
   workspace = false,
+  wide = false,
 }: {
   children: ReactNode;
   route: string;
   workspace?: boolean;
+  wide?: boolean;
 }) {
   return (
     <FluentRegistry key={route}>
       <AppShell
         documentationEnabled={apiDocumentationEnabled()}
         workspace={workspace}
+        wide={wide}
       >
         {children}
       </AppShell>

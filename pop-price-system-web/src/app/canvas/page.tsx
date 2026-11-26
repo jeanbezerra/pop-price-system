@@ -1,32 +1,35 @@
 import { PageFrame } from "@/components/page-frame";
 import { CanvasView } from "@/components/portal/canvas-view";
-import { getProviders } from "@/lib/api";
-import {
-  getModel,
-  getParameters,
-  getQuotes,
-  getRate,
-  getRates,
-  getServicePage,
-} from "@/lib/portal-api";
+import { redirect } from "next/navigation";
+import { ApiNotice } from "@/components/shared";
+import { getArchitectureComponents } from "@/lib/component-api";
+import { getModel, getParameters, getQuotes, getRate } from "@/lib/portal-api";
 import type { CatalogRate } from "@/lib/portal-contracts";
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Canvas de arquitetura" };
+export const metadata = { title: "Editor de estruturas" };
 export default async function Page({
   searchParams,
 }: {
   searchParams: Promise<{ model?: string }>;
 }) {
   const query = await searchParams;
-  const [model, providers, services, rates, quotes, parameters] =
-    await Promise.all([
-      query.model ? getModel(query.model) : null,
-      getProviders(),
-      getServicePage(),
-      getRates({}),
-      getQuotes(),
-      getParameters(),
-    ]);
+  if (!query.model) redirect("/estruturas?new=1");
+  const model = await getModel(query.model);
+  if (!model.ok)
+    return (
+      <PageFrame route="/canvas">
+        <ApiNotice message={model.message} />
+      </PageFrame>
+    );
+  if (!model.data.specification?.primaryProvider)
+    redirect(`/estruturas?configure=${encodeURIComponent(model.data.id)}`);
+  const [quotes, parameters, components] = await Promise.all([
+    getQuotes(),
+    getParameters(),
+    getArchitectureComponents({
+      provider: model.data.specification.primaryProvider,
+    }),
+  ]);
   const ids = model?.ok
     ? [
         ...new Set([
@@ -37,26 +40,25 @@ export default async function Page({
         ]),
       ]
     : [];
+  const rateIds = ids.filter((id): id is number => id !== null);
   const resolvedRates: CatalogRate[] = [];
-  for (let offset = 0; offset < ids.length; offset += 8) {
+  for (let offset = 0; offset < rateIds.length; offset += 8) {
     const results = await Promise.all(
-      ids.slice(offset, offset + 8).map(getRate),
+      rateIds.slice(offset, offset + 8).map(getRate),
     );
     for (const result of results)
       if (result.ok) resolvedRates.push(result.data);
   }
   return (
-    <PageFrame route="/canvas">
+    <PageFrame route="/canvas" workspace>
       <CanvasView
         key={model?.ok ? model.data.id : "new"}
         data={{
           model,
-          providers,
-          services,
-          rates,
           quotes,
           parameters,
           resolvedRates,
+          components,
         }}
       />
     </PageFrame>

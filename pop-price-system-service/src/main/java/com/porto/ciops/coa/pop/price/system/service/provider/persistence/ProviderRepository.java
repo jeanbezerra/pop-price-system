@@ -23,7 +23,7 @@ public class ProviderRepository {
         for (var service : services)
             jdbc.sql(
                             """
-                            INSERT INTO ratecard.cloud_service(provider,code,name,attributes) VALUES(:provider,:code,:name,CAST(:attrs AS jsonb))
+                            INSERT INTO pop_price_system_service.cloud_service(provider,code,name,attributes) VALUES(:provider,:code,:name,CAST(:attrs AS jsonb))
                             ON CONFLICT(provider,code) DO UPDATE SET name=excluded.name,attributes=excluded.attributes
                              WHERE cloud_service.name IS DISTINCT FROM excluded.name OR cloud_service.attributes IS DISTINCT FROM excluded.attributes
                             """)
@@ -38,7 +38,7 @@ public class ProviderRepository {
         for (String region : regions)
             jdbc.sql(
                             """
-                            INSERT INTO ratecard.cloud_region(provider,code,name) VALUES(:provider,:region,:region) ON CONFLICT DO NOTHING
+                            INSERT INTO pop_price_system_service.cloud_region(provider,code,name) VALUES(:provider,:region,:region) ON CONFLICT DO NOTHING
                             """)
                     .param("provider", provider)
                     .param("region", region)

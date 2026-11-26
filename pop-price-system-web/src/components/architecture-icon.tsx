@@ -14,7 +14,7 @@ export function ArchitectureIcon({
   size = 40,
   alt = "",
 }: {
-  icon: ArchitectureIconDefinition | null;
+  icon: Pick<ArchitectureIconDefinition, "assetPath"> | null;
   size?: 32 | 40 | 64;
   alt?: string;
 }) {

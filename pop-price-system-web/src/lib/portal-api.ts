@@ -10,8 +10,23 @@ import type {
   ModelSummary,
   Parameters,
   Region,
+  StructureQuery,
+  StructurePage,
   Valuation,
 } from "./portal-contracts";
+export const getStructures = (filters: StructureQuery = {}) => {
+  const params = new URLSearchParams({
+    size: "20",
+    offset: "0",
+    lifecycle: "ACTIVE",
+    sort: "updatedAt",
+    direction: "DESC",
+  });
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== undefined && value !== "") params.set(key, String(value));
+  }
+  return apiRequest<StructurePage>(`api/v1/architecture-models?${params}`);
+};
 
 export const getQuotes = () =>
   apiRequest<ExchangeQuote[]>("api/v1/exchange-rates");

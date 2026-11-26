@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   Badge,
   Button,
@@ -13,14 +13,12 @@ import {
   mergeClasses,
   shorthands,
   tokens,
+  Accordion,
+  AccordionItem,
+  AccordionHeader,
+  AccordionPanel,
+  type AccordionPanelProps,
 } from "@fluentui/react-components";
-import {
-  AddRegular,
-  SubtractRegular,
-  GridRegular,
-  CloudRegular,
-  SaveRegular,
-} from "@fluentui/react-icons";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -31,6 +29,8 @@ import {
   useNodesState,
   useEdgesState,
   useReactFlow,
+  NodeChangeset,
+  EdgeChangeset,
   type Node,
   type Edge,
   type NodeProps,
@@ -38,26 +38,21 @@ import {
 } from "@xyflow/react";
 import {
   estimateArchitecture,
-  loadRegions,
-  loadServices,
   publishArchitecture,
   saveArchitecture,
-  searchRates,
 } from "@/app/actions";
-import type { ApiResult, Provider, ServicePage } from "@/lib/contracts";
+import type { ApiResult } from "@/lib/contracts";
 import type {
   ArchitectureGraph,
   ArchitectureModel,
   ArchitectureNode,
   ArchitectureEdge,
   CatalogRate,
-  CursorPage,
   ExchangeQuote,
   Parameters,
-  Region,
   Valuation,
 } from "@/lib/portal-contracts";
-import { ApiNotice, EmptyState, PageHeading, usePageStyles } from "../shared";
+import { ApiNotice } from "../shared";
 import {
   dateLabel,
   failure,
@@ -66,50 +61,104 @@ import {
   type Notice,
   usePortalStyles,
 } from "./shared";
+import { ArchitectureIcon } from "../architecture-icon";
+import { ComponentPricing } from "./component-pricing";
+import {
+  structureCategories,
+  structureEnvironments,
+} from "@/lib/portal-contracts";
+import { StructurePalette } from "./structure-palette";
+import type {
+  ArchitectureComponent,
+  ComponentPage,
+} from "@/lib/component-contracts";
 import { NodeProperties, EdgeProperties } from "./canvas-forms";
 import { ValuationResult } from "./valuation-result";
+import { CanvasCommandBar } from "./canvas-command-bar";
+import { organizeComponents } from "./canvas-layout";
 
 type ResourceNode = Node<
   { component: ArchitectureNode; rate?: CatalogRate },
   "resource"
 >;
 type ResourceEdge = Edge<{ connection: ArchitectureEdge }>;
+// Keep form drafts and library filters when a section closes; native hidden handles visibility.
+const persistentPanel: NonNullable<AccordionPanelProps["collapseMotion"]> = {
+  children: (_, props) => <>{props.children}</>,
+};
 const useStyles = makeStyles({
+  // AppShell reserves 76px for the product header; the drawing fills the remainder.
+  editor: {
+    height: "calc(100dvh - 76px)",
+    minWidth: 0,
+    minHeight: 0,
+    display: "grid",
+    gridTemplateRows: "auto minmax(0,1fr)",
+  },
   workspace: {
     display: "grid",
-    gridTemplateColumns: "280px minmax(0,1fr)",
-    gap: tokens.spacingHorizontalL,
     minWidth: 0,
-    "@media (max-width:1100px)": { gridTemplateColumns: "minmax(0,1fr)" },
+    minHeight: 0,
+    gridTemplateColumns: "minmax(0,1fr) 380px",
+    "@media (max-width:760px)": {
+      gridTemplateColumns: "minmax(0,1fr)",
+      gridTemplateRows: "minmax(240px,1fr) minmax(0,1fr)",
+    },
   },
-  palette: {
+  drawing: { position: "relative", minWidth: 0, minHeight: 0 },
+  canvas: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: tokens.colorNeutralBackground2,
+  },
+  sidebar: {
+    minWidth: 0,
+    minHeight: 0,
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: tokens.colorNeutralBackground1,
+    borderLeft: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
+    "@media (max-width:760px)": {
+      borderLeftWidth: 0,
+      borderTop: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
+    },
+  },
+  sidebarHeader: {
     display: "grid",
-    gap: tokens.spacingVerticalM,
-    maxHeight: "620px",
+    gap: tokens.spacingVerticalXS,
+    padding: tokens.spacingHorizontalL,
+    borderBottom: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
+  },
+  sidebarBody: {
     overflowY: "auto",
-    padding: tokens.spacingHorizontalXS,
+    minHeight: 0,
+    flexGrow: 1,
+    scrollbarGutter: "stable",
     ":focus-visible": {
       outline: `${tokens.strokeWidthThick} solid ${tokens.colorStrokeFocus2}`,
     },
-    "@media (max-width: 1100px)": { maxHeight: "300px" },
   },
-  canvas: {
-    height: "560px",
-    minWidth: 0,
-    backgroundColor: tokens.colorNeutralBackground2,
-    ...shorthands.border(
-      tokens.strokeWidthThin,
-      "solid",
-      tokens.colorNeutralStroke2,
-    ),
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+  section: {
+    borderBottom: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
   },
-  right: {
+  sectionContent: {
+    margin: 0,
+    padding: tokens.spacingHorizontalL,
+    paddingTop: tokens.spacingVerticalS,
     display: "grid",
     gap: tokens.spacingVerticalL,
     minWidth: 0,
-    alignContent: "start",
+    "> *": { minWidth: 0 },
+    "&[hidden]": { display: "none" },
   },
+  resourceContent: {
+    display: "grid",
+    gap: tokens.spacingVerticalL,
+    minWidth: 0,
+    "> *": { minWidth: 0 },
+    "&[hidden]": { display: "none" },
+  },
+  palette: { display: "grid", gap: tokens.spacingVerticalM, minWidth: 0 },
   node: {
     width: "240px",
     height: "128px",
@@ -162,7 +211,14 @@ function ResourceCard({ data, selected }: NodeProps<ResourceNode>) {
       <Handle type="target" position={Position.Left} className={styles.port} />
       <Card className={mergeClasses(styles.node, selected && styles.selected)}>
         <div className={styles.nodeTop}>
-          <CloudRegular aria-hidden="true" />
+          <ArchitectureIcon
+            icon={
+              data.component.iconAssetPath
+                ? { assetPath: data.component.iconAssetPath }
+                : null
+            }
+            size={40}
+          />
           <Text weight="semibold" truncate className={styles.nodeName}>
             {data.component.name}
           </Text>
@@ -170,7 +226,9 @@ function ResourceCard({ data, selected }: NodeProps<ResourceNode>) {
         <Text size={200}>
           {data.rate
             ? `${data.rate.serviceCode} · ${data.rate.regionCode}`
-            : `Tarifa ${data.component.rateId}`}
+            : data.component.rateId
+              ? `Tarifa ${data.component.rateId}`
+              : `${data.component.provider} · Tarifa a definir`}
         </Text>
         <p className={ui.muted}>
           {data.component.quantity} unidade(s) · {data.component.consumption}{" "}
@@ -204,6 +262,11 @@ function edgeFrom(connection: ArchitectureEdge): ResourceEdge {
     data: { connection },
     animated: false,
     label: `${connection.monthlyGb} GB/mês`,
+    labelStyle: {
+      fill: tokens.colorNeutralForeground1,
+      fontSize: tokens.fontSizeBase200,
+    },
+    labelBgStyle: { fill: tokens.colorNeutralBackground1 },
     markerEnd: {
       type: MarkerType.ArrowClosed,
       color: tokens.colorBrandStroke1,
@@ -240,19 +303,14 @@ function consumptionDefaults(rate: CatalogRate) {
 
 export interface CanvasData {
   model: ApiResult<ArchitectureModel> | null;
-  providers: ApiResult<Provider[]>;
-  services: ApiResult<ServicePage>;
-  rates: ApiResult<CursorPage<CatalogRate>>;
   quotes: ApiResult<ExchangeQuote[]>;
   parameters: ApiResult<Parameters>;
   resolvedRates: CatalogRate[];
+  components: ApiResult<ComponentPage<ArchitectureComponent>>;
 }
 export function CanvasView({ data }: { data: CanvasData }) {
   const model = data.model?.ok ? data.model.data : null;
-  const rates = [
-    ...data.resolvedRates,
-    ...(data.rates.ok ? data.rates.data.items : []),
-  ];
+  const rates = data.resolvedRates;
   return (
     <ReactFlowProvider
       initialNodes={(model?.graph.nodes || []).map((node) =>
@@ -267,18 +325,19 @@ export function CanvasView({ data }: { data: CanvasData }) {
   );
 }
 function CanvasEditor({ data }: { data: CanvasData }) {
-  const shared = usePageStyles();
   const styles = useStyles();
   const ui = usePortalStyles();
   const first = useRef<HTMLInputElement>(null);
+  const [sections, setSections] = useState<string[]>(["resources"]);
+  function openSection(section: string) {
+    setSections((old) => (old.includes(section) ? old : [...old, section]));
+  }
   const flow = useReactFlow<ResourceNode, ResourceEdge>();
+  const drawing = useRef<HTMLDivElement>(null);
   const initial = data.model?.ok ? data.model.data : null;
-  const initialRates = [
-    ...data.resolvedRates,
-    ...(data.rates.ok ? data.rates.data.items : []),
-  ];
+  const initialRates = data.resolvedRates;
   const [model, setModel] = useState(initial);
-  const [name, setName] = useState(initial?.name || "Nova arquitetura");
+  const [name, setName] = useState(initial?.name || "Nova estrutura");
   const [hours, setHours] = useState(
     String(
       initial?.hoursPerMonth ??
@@ -303,21 +362,7 @@ function CanvasEditor({ data }: { data: CanvasData }) {
         })
       : "",
   );
-  const [rates, setRates] = useState(
-    data.rates.ok
-      ? data.rates.data
-      : { items: [], size: 50, hasMore: false, nextAfterId: null },
-  );
   const [known, setKnown] = useState(initialRates);
-  const [services, setServices] = useState(
-    data.services.ok
-      ? data.services.data
-      : { items: [], size: 200, hasMore: false, nextAfter: null },
-  );
-  const [regions, setRegions] = useState<Region[]>([]);
-  const [provider, setProvider] = useState("");
-  const [service, setService] = useState("");
-  const [region, setRegion] = useState("");
   const [selection, setSelection] = useState<{ node?: string; edge?: string }>(
     {},
   );
@@ -332,36 +377,78 @@ function CanvasEditor({ data }: { data: CanvasData }) {
   const [notice, setNotice] = useState<Notice | null>(null);
   const [value, setValue] = useState<Valuation | null>(null);
   const [pending, start] = useTransition();
-  const readOnly = model?.status === "PUBLISHED";
-  const locked = readOnly || pending;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const archived = !!model?.archivedAt;
+  const readOnly = model?.status === "PUBLISHED" || archived;
+  const dragged = useRef<ArchitectureComponent | null>(null);
+  const locked = readOnly || pending || !mounted;
   const graph = documentOf(nodes, edges);
   const dirty =
     saved !== JSON.stringify({ name, hoursPerMonth: Number(hours), graph });
+  useEffect(() => {
+    function beforeUnload(event: BeforeUnloadEvent) {
+      if (dirty && !readOnly) event.preventDefault();
+    }
+    window.addEventListener("beforeunload", beforeUnload);
+    return () => window.removeEventListener("beforeunload", beforeUnload);
+  }, [dirty, readOnly]);
   const selectedNode = nodes.find((n) => n.id === selection.node);
   const selectedEdge = edges.find((e) => e.id === selection.edge);
-  function add(rate: CatalogRate) {
+  useEffect(() => {
+    if (selection.node || selection.edge) openSection("properties");
+  }, [selection.node, selection.edge]);
+  function addResource(
+    template: ArchitectureComponent,
+    position?: { x: number; y: number },
+  ) {
     if (locked) return;
-    if (nodes.length + edges.length >= 100)
-      return setNotice({
+    if (
+      template.provider !== "GENERIC" &&
+      !model?.specification?.locations.some(
+        (l) => l.provider === template.provider,
+      )
+    ) {
+      setNotice({
         intent: "warning",
-        message: "O modelo aceita até 100 componentes e ligações no total.",
+        message: "O recurso usa uma cloud fora da especificação da estrutura.",
       });
-    const component: ArchitectureNode = {
+      return;
+    }
+    if (nodes.length + edges.length >= 100) {
+      setNotice({
+        intent: "warning",
+        message: "A estrutura aceita até 100 componentes e ligações.",
+      });
+      return;
+    }
+    const bounds = drawing.current?.getBoundingClientRect();
+    const center = flow.screenToFlowPosition({
+      x: (bounds?.x ?? 0) + (bounds?.width ?? window.innerWidth) / 2 - 120,
+      y: (bounds?.y ?? 0) + (bounds?.height ?? window.innerHeight) / 2 - 64,
+    });
+    const node: ArchitectureNode = {
       id: crypto.randomUUID(),
-      name: rate.serviceCode,
-      x: 80 + (nodes.length % 3) * 300,
-      y: 80 + Math.floor(nodes.length / 3) * 180,
-      rateId: rate.id,
-      category: rate.family || "infraestrutura",
+      name: template.name,
+      x: position?.x ?? center.x,
+      y: position?.y ?? center.y,
+      rateId: null,
+      provider: template.provider,
+      serviceCode: template.serviceCode,
+      iconKey: template.icon?.key,
+      iconRelease: template.icon?.release,
+      iconAssetPath: template.icon?.assetPath,
+      category: template.category,
       accountCode: "principal",
       quantity: "1",
       consumption: "1",
-      ...consumptionDefaults(rate),
+      consumptionUnit: "Hrs",
+      period: "HOUR",
       retentionDays: null,
       availabilityZone: null,
     };
-    setNodes((old) => [...old, nodeFrom(component, known)]);
-    setSelection({ node: component.id });
+    setNodes((old) => [...old, nodeFrom(node, known)]);
+    setSelection({ node: node.id });
   }
   function connect(connection: Connection) {
     if (
@@ -374,7 +461,7 @@ function CanvasEditor({ data }: { data: CanvasData }) {
     if (nodes.length + edges.length >= 100)
       return setNotice({
         intent: "warning",
-        message: "O modelo aceita até 100 componentes e ligações.",
+        message: "A estrutura aceita até 100 componentes e ligações.",
       });
     if (
       edges.some(
@@ -424,13 +511,16 @@ function CanvasEditor({ data }: { data: CanvasData }) {
       setNotice({
         intent: "error",
         message:
-          "Informe o nome da arquitetura e de 0 a 744 horas mensais, com valor maior que zero.",
+          "Informe o nome da estrutura e de 0 a 744 horas mensais, com valor maior que zero.",
       });
-      first.current?.focus();
+      openSection("structure");
+      requestAnimationFrame(() => first.current?.focus());
       return null;
     }
-    if (model && !dirty) return model;
-    const response = await saveArchitecture(model?.id || null, {
+    if (!model?.specification) return null;
+    if (!dirty) return model;
+    const response = await saveArchitecture(model.id, {
+      specification: model.specification,
       name,
       hoursPerMonth: Number(hours),
       graph,
@@ -443,343 +533,116 @@ function CanvasEditor({ data }: { data: CanvasData }) {
     accept(response.data);
     return response.data;
   }
-  function search(append = false) {
-    start(async () => {
-      const response = await searchRates({
-        provider,
-        service,
-        region,
-        afterId: append ? (rates.nextAfterId ?? undefined) : undefined,
-      });
-      if (!response.ok) return setNotice(failure(response));
-      setRates({
-        ...response.data,
-        items: append
-          ? [...rates.items, ...response.data.items]
-          : response.data.items,
-      });
-      setKnown((old) => [
-        ...old,
-        ...response.data.items.filter((r) => !old.some((k) => k.id === r.id)),
-      ]);
-    });
-  }
-  const ready =
-    data.providers.ok &&
-    data.rates.ok &&
-    data.parameters.ok &&
-    (!data.model || data.model.ok);
+  const ready = data.parameters.ok && (!data.model || data.model.ok);
   return (
-    <div className={shared.page}>
-      <PageHeading
-        title="Canvas de arquitetura"
-        showRefresh={false}
-        description="Monte os componentes com preços sincronizados, configure os fluxos e publique um modelo reutilizável."
+    <div className={styles.editor}>
+      <CanvasCommandBar
+        readOnly={readOnly}
+        pending={pending}
+        canOrganize={!locked && nodes.length > 1}
+        canDelete={
+          !locked &&
+          !!(
+            selectedNode ||
+            selectedEdge ||
+            nodes.some((n) => n.selected) ||
+            edges.some((e) => e.selected)
+          )
+        }
+        canSave={!locked && ready}
+        onOrganize={() => {
+          if (locked) return;
+          setNodes((old) => organizeComponents(old, edges));
+          setNotice({
+            intent: "success",
+            message:
+              "Componentes organizados. Salve a estrutura para manter o desenho.",
+          });
+          requestAnimationFrame(
+            () => void flow.fitView({ duration: 0, padding: 0.2 }),
+          );
+        }}
+        onDelete={() => {
+          if (locked) return;
+          void flow.deleteElements({
+            nodes: nodes
+              .filter((n) => n.selected || n.id === selection.node)
+              .map((n) => ({ id: n.id })),
+            edges: edges
+              .filter((e) => e.selected || e.id === selection.edge)
+              .map((e) => ({ id: e.id })),
+          });
+          setSelection({});
+        }}
+        onZoomIn={() => void flow.zoomIn({ duration: 0 })}
+        onZoomOut={() => void flow.zoomOut({ duration: 0 })}
+        onFit={() => void flow.fitView({ duration: 0, padding: 0.2 })}
+        onSave={() =>
+          start(async () => {
+            if (await persist())
+              setNotice({ intent: "success", message: "Estrutura salva." });
+          })
+        }
       />
-      {!ready && (
-        <ApiNotice message="Não foi possível preparar todos os dados do Canvas. Confira a API e a preparação das bases antes de continuar." />
-      )}
-      <Feedback
-        notice={notice}
-        onDismiss={() => setNotice(null)}
-        onReview={() => first.current?.focus()}
-      />
-      <Card className={shared.card}>
-        <div className={ui.fields}>
-          <Field label="Nome da arquitetura" required>
-            <Input
-              ref={first}
-              value={name}
-              maxLength={200}
-              required
-              disabled={locked}
-              onChange={(_, item) => setName(item.value)}
-            />
-          </Field>
-          <Field label="Horas por mês" required>
-            <Input
-              type="number"
-              min="0.000001"
-              max="744"
-              step="0.000001"
-              value={hours}
-              required
-              disabled={locked}
-              onChange={(_, item) => setHours(item.value)}
-            />
-          </Field>
-        </div>
-        <div className={ui.actions}>
-          <div className={ui.row}>
-            <Badge
-              appearance="tint"
-              color={readOnly ? "success" : "informative"}
-            >
-              {readOnly ? "Modelo publicado" : "Rascunho"}
-            </Badge>
-            <span className={ui.muted}>
-              {nodes.length} componentes · {edges.length} ligações
-              {dirty && !readOnly ? " · Alterações não salvas" : ""}
-            </span>
-          </div>
-          <div className={ui.row}>
-            {!readOnly && (
-              <>
-                <Button
-                  icon={<SaveRegular />}
-                  disabled={pending || !ready}
-                  onClick={() =>
-                    start(async () => {
-                      if (await persist())
-                        setNotice({
-                          intent: "success",
-                          message: "Rascunho salvo.",
-                        });
-                    })
-                  }
-                >
-                  {pending ? "Aguarde…" : "Salvar rascunho"}
-                </Button>
-                <Button
-                  appearance="primary"
-                  disabled={pending || !ready || !nodes.length}
-                  onClick={() =>
-                    start(async () => {
-                      const savedModel = await persist();
-                      if (!savedModel) return;
-                      const result = await publishArchitecture(
-                        savedModel.id,
-                        savedModel.revision,
-                      );
-                      if (!result.ok) return setNotice(failure(result));
-                      accept(result.data);
-                      setNotice({
-                        intent: "success",
-                        message:
-                          "Modelo publicado no catálogo final. Ele pode ser reutilizado em novas estimativas.",
-                      });
-                    })
-                  }
-                >
-                  Publicar modelo
-                </Button>
-              </>
-            )}
-            <Button as="a" href="/modelos">
-              Ver modelos
-            </Button>
-          </div>
-        </div>
-        {readOnly && (
-          <p className={ui.muted}>
-            Este modelo foi publicado. Para mudar a arquitetura, crie uma cópia
-            na lista de modelos. Você pode gerar estimativas sem alterar o
-            modelo.
-          </p>
-        )}
-      </Card>
       <div className={styles.workspace}>
-        <Card className={shared.card}>
-          <h2 className={ui.title}>Biblioteca de componentes</h2>
-          <form
-            className={ui.form}
-            onSubmit={(event) => {
-              event.preventDefault();
-              search();
-            }}
-          >
-            <Field label="Provedor">
-              <Select
-                value={provider}
-                disabled={pending}
-                onChange={(_, item) => {
-                  setProvider(item.value);
-                  setService("");
-                  setRegion("");
-                  start(async () => {
-                    const list = await loadServices(item.value);
-                    if (list.ok) setServices(list.data);
-                    const listRegions = item.value
-                      ? await loadRegions(item.value)
-                      : null;
-                    setRegions(listRegions?.ok ? listRegions.data : []);
-                  });
-                }}
-              >
-                <option value="">Todos os provedores</option>
-                {data.providers.ok &&
-                  data.providers.data.map((p) => (
-                    <option key={p.code} value={p.code}>
-                      {p.name}
-                    </option>
-                  ))}
-              </Select>
-            </Field>
-            <Field label="Serviço">
-              <Select
-                value={service}
-                disabled={pending}
-                onChange={(_, item) => setService(item.value)}
-              >
-                <option value="">Todos os serviços</option>
-                {services.items.map((s) => (
-                  <option key={`${s.provider}/${s.code}`} value={s.code}>
-                    {s.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            {services.hasMore && (
-              <Button
-                size="small"
-                disabled={pending}
-                onClick={() =>
-                  start(async () => {
-                    const response = await loadServices(
-                      provider,
-                      services.nextAfter || "",
-                    );
-                    if (response.ok)
-                      setServices({
-                        ...response.data,
-                        items: [...services.items, ...response.data.items],
-                      });
-                    else setNotice(failure(response));
-                  })
-                }
-              >
-                Carregar mais serviços
-              </Button>
-            )}
-            <Field label="Região">
-              <Select
-                value={region}
-                disabled={pending}
-                onChange={(_, item) => setRegion(item.value)}
-              >
-                <option value="">Todas as regiões</option>
-                {regions.map((r) => (
-                  <option key={r.code} value={r.code}>
-                    {r.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Button type="submit" disabled={pending}>
-              Buscar tarifas
-            </Button>
-          </form>
-          <p className={ui.muted}>
-            Preços locais On-Demand em USD. Confira a unidade e a faixa antes de
-            adicionar.
-          </p>
-          <div
-            className={styles.palette}
-            role="region"
-            aria-label="Tarifas disponíveis"
-            tabIndex={0}
-          >
-            {rates.items
-              .filter((r) => r.currency === "USD")
-              .map((rate) => (
-                <Card key={rate.id} size="small">
-                  <Text weight="semibold">{rate.serviceCode}</Text>
-                  <Text size={200}>
-                    {rate.regionCode} · {rate.family}
-                  </Text>
-                  <Text size={200}>
-                    {rate.sku} · {rate.unit}
-                  </Text>
-                  <Text>{money(rate.unitPrice, "USD")} por unidade</Text>
-                  <Text size={200}>
-                    Faixa: {rate.rangeBegin} a {rate.rangeEnd ?? "sem limite"}
-                  </Text>
-                  <Button
-                    size="small"
-                    icon={<AddRegular />}
-                    disabled={locked || !ready}
-                    onClick={() => add(rate)}
-                  >
-                    Adicionar componente
-                  </Button>
-                  {selectedNode && !locked && (
-                    <Button
-                      size="small"
-                      onClick={() =>
-                        setNodes((old) =>
-                          old.map((n) =>
-                            n.id === selectedNode.id
-                              ? {
-                                  ...n,
-                                  data: {
-                                    component: {
-                                      ...n.data.component,
-                                      rateId: rate.id,
-                                      ...consumptionDefaults(rate),
-                                    },
-                                    rate,
-                                  },
-                                }
-                              : n,
-                          ),
-                        )
-                      }
-                    >
-                      Substituir tarifa selecionada
-                    </Button>
-                  )}
-                </Card>
-              ))}
-          </div>
-          {!rates.items.length && (
-            <EmptyState
-              icon={<GridRegular />}
-              title="Nenhuma tarifa disponível"
-              description="Prepare o catálogo no fluxo do Construtor ou revise os filtros para encontrar preços já sincronizados."
-              action={{
-                href: "/construtor/sincronizacoes",
-                label: "Preparar bases",
-              }}
-            />
-          )}
-          {rates.hasMore && (
-            <Button disabled={pending} onClick={() => search(true)}>
-              Carregar mais tarifas
-            </Button>
-          )}
-        </Card>
-        <div className={styles.right}>
-          <div className={ui.actions}>
-            <h2 className={ui.title}>Desenho da arquitetura</h2>
-            <div className={ui.row}>
-              <Button
-                icon={<AddRegular />}
-                aria-label="Ampliar Canvas"
-                onClick={() => void flow.zoomIn({ duration: 0 })}
-              />
-              <Button
-                icon={<SubtractRegular />}
-                aria-label="Reduzir Canvas"
-                onClick={() => void flow.zoomOut({ duration: 0 })}
-              />
-              <Button
-                onClick={() => void flow.fitView({ duration: 0, padding: 0.2 })}
-              >
-                Enquadrar componentes
-              </Button>
-            </div>
-          </div>
+        <div className={styles.drawing}>
           <div
             className={styles.canvas}
+            ref={drawing}
             role="region"
             aria-label="Editor visual de arquitetura"
+            onDragOver={(event) => {
+              if (!locked) {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "copy";
+              }
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              if (locked) return;
+              const position = flow.screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
+              });
+              const componentId = event.dataTransfer.getData(
+                "application/x-structure-component",
+              );
+              if (dragged.current?.id === componentId) {
+                addResource(dragged.current, position);
+                dragged.current = null;
+                return;
+              }
+            }}
           >
             <ReactFlow<ResourceNode, ResourceEdge>
               nodes={nodes}
               edges={edges}
+              fitView
+              fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
               nodeTypes={nodeTypes}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
+              onNodesChange={(changes) =>
+                onNodesChange(
+                  locked
+                    ? new NodeChangeset(
+                        changes
+                          .toArray()
+                          .filter(
+                            (c) =>
+                              c.type === "select" || c.type === "dimensions",
+                          ),
+                      )
+                    : changes,
+                )
+              }
+              onEdgesChange={(changes) =>
+                onEdgesChange(
+                  locked
+                    ? new EdgeChangeset(
+                        changes.toArray().filter((c) => c.type === "select"),
+                      )
+                    : changes,
+                )
+              }
               onConnect={connect}
               nodesDraggable={!locked}
               nodesConnectable={!locked}
@@ -797,7 +660,7 @@ function CanvasEditor({ data }: { data: CanvasData }) {
               maxZoom={2}
               ariaLabelConfig={{
                 "node.a11yDescription.keyboardDisabled":
-                  "Selecione o componente para consultar suas propriedades na lista abaixo.",
+                  "Selecione o componente para consultar suas propriedades na central de recursos.",
                 "node.a11yDescription.ariaLiveMessage": ({ direction, x, y }) =>
                   `Componente movido para ${direction === "left" ? "a esquerda" : direction === "right" ? "a direita" : direction === "up" ? "cima" : "baixo"}, posição ${Math.round(x)}, ${Math.round(y)}.`,
                 "controls.ariaLabel": "Controles do Canvas",
@@ -808,253 +671,562 @@ function CanvasEditor({ data }: { data: CanvasData }) {
                 "minimap.ariaLabel": "Visão geral da arquitetura",
                 "handle.ariaLabel": "Ponto de ligação",
                 "node.a11yDescription.default":
-                  "Use as setas para mover o componente; Delete para remover. As propriedades também estão disponíveis na lista abaixo.",
+                  "Use as setas para mover o componente; Delete para remover. As propriedades também estão disponíveis na central de recursos.",
                 "edge.a11yDescription.default":
-                  "Use Delete para remover a ligação. As propriedades também estão disponíveis na lista abaixo.",
+                  "Use Delete para remover a ligação. As propriedades também estão disponíveis na central de recursos.",
               }}
             >
               <Background gap={20} color={tokens.colorNeutralStroke2} />
             </ReactFlow>
           </div>
-          <p className={ui.muted}>
-            Arraste os componentes e conecte os pontos laterais. Você também
-            pode configurar todos os componentes e criar ligações pelos
-            controles abaixo, sem arrastar.
-          </p>
         </div>
-      </div>
-      <Card className={shared.card}>
-        <h2 className={ui.title}>Componentes e ligações</h2>
-        {!nodes.length ? (
-          <p>Adicione um componente da biblioteca para começar.</p>
-        ) : (
-          <>
-            <div className={styles.rows}>
-              {nodes.map((node) => (
-                <div className={styles.line} key={node.id}>
-                  <span>{node.data.component.name}</span>
-                  <div className={ui.row}>
-                    <Button onClick={() => setSelection({ node: node.id })}>
-                      Configurar componente
-                    </Button>
-                    {!locked && (
-                      <Button
-                        onClick={() => {
+        <aside className={styles.sidebar} aria-label="Central de recursos">
+          <header className={styles.sidebarHeader}>
+            <h2 className={ui.title}>Central de recursos</h2>
+            <Text size={200}>
+              {nodes.length} componentes · {edges.length} ligações
+              {dirty && !readOnly ? " · Alterações não salvas" : ""}
+            </Text>
+          </header>
+          <div className={styles.sidebarBody}>
+            {!ready && (
+              <ApiNotice message="Não foi possível preparar todos os dados do Canvas. Confira a API e a preparação das bases antes de continuar." />
+            )}
+            <Feedback
+              notice={notice}
+              onDismiss={() => setNotice(null)}
+              onReview={() => {
+                openSection("structure");
+                first.current?.focus();
+              }}
+            />
+            <Accordion
+              multiple
+              collapsible
+              openItems={sections}
+              onToggle={(_, item) => setSections(item.openItems.map(String))}
+            >
+              <AccordionItem value="properties" className={styles.section}>
+                <AccordionHeader as="h2" expandIconPosition="end">
+                  {selectedEdge
+                    ? "Propriedades da ligação"
+                    : "Propriedades do componente"}
+                </AccordionHeader>
+                <AccordionPanel
+                  className={styles.sectionContent}
+                  collapseMotion={persistentPanel}
+                  hidden={!sections.includes("properties")}
+                >
+                  {!selectedNode && !selectedEdge && (
+                    <div className={ui.form}>
+                      <p>
+                        Selecione um componente ou uma ligação para configurar a
+                        solução.
+                      </p>
+                      <p className={ui.muted}>
+                        Conecte os pontos laterais ou use os controles de
+                        ligação na seção Componentes e ligações.
+                      </p>
+                    </div>
+                  )}
+                  {selectedNode && (
+                    <>
+                      <NodeProperties
+                        embedded
+                        key={`${selectedNode.id}/${model?.revision || 0}`}
+                        node={selectedNode.data.component}
+                        rate={selectedNode.data.rate}
+                        readOnly={locked}
+                        onApply={(component) => {
                           setNodes((old) =>
-                            old.filter((n) => n.id !== node.id),
-                          );
-                          setEdges((old) =>
-                            old.filter(
-                              (e) =>
-                                e.source !== node.id && e.target !== node.id,
+                            old.map((n) =>
+                              n.id === component.id
+                                ? { ...n, data: { ...n.data, component } }
+                                : n,
                             ),
                           );
-                          setSelection({});
+                          setNotice({
+                            intent: "success",
+                            message:
+                              "Propriedades aplicadas. Salve a estrutura para preservá-las.",
+                          });
                         }}
-                      >
-                        Remover componente
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {!readOnly && (
-              <div className={ui.fields}>
-                <Field label="Origem da ligação">
-                  <Select
-                    value={source}
-                    disabled={pending}
-                    onChange={(_, item) => setSource(item.value)}
-                  >
-                    <option value="">Selecione a origem</option>
-                    {nodes.map((n) => (
-                      <option value={n.id} key={n.id}>
-                        {n.data.component.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Destino da ligação">
-                  <Select
-                    value={target}
-                    disabled={pending}
-                    onChange={(_, item) => setTarget(item.value)}
-                  >
-                    <option value="">Selecione o destino</option>
-                    {nodes
-                      .filter((n) => n.id !== source)
-                      .map((n) => (
-                        <option value={n.id} key={n.id}>
-                          {n.data.component.name}
-                        </option>
-                      ))}
-                  </Select>
-                </Field>
-                <Button
-                  disabled={pending || !source || !target || source === target}
-                  onClick={() =>
-                    connect({
-                      source,
-                      target,
-                      sourceHandle: null,
-                      targetHandle: null,
-                    })
-                  }
-                >
-                  Adicionar ligação
-                </Button>
-              </div>
-            )}
-            <div className={styles.rows}>
-              {edges.map((edge) => (
-                <div className={styles.line} key={edge.id}>
-                  <span>
-                    {
-                      nodes.find((n) => n.id === edge.source)?.data.component
-                        .name
-                    }{" "}
-                    →{" "}
-                    {
-                      nodes.find((n) => n.id === edge.target)?.data.component
-                        .name
-                    }
-                  </span>
-                  <div className={ui.row}>
-                    <Button onClick={() => setSelection({ edge: edge.id })}>
-                      Configurar ligação
-                    </Button>
-                    {!locked && (
-                      <Button
-                        onClick={() => {
-                          setEdges((old) =>
-                            old.filter((e) => e.id !== edge.id),
+                      />
+                      <ComponentPricing
+                        node={selectedNode.data.component}
+                        specification={model!.specification!}
+                        readOnly={locked}
+                        onKnown={(rates) =>
+                          setKnown((old) => [
+                            ...old,
+                            ...rates.filter(
+                              (r) => !old.some((k) => k.id === r.id),
+                            ),
+                          ])
+                        }
+                        onService={(serviceCode) =>
+                          setNodes((old) =>
+                            old.map((n) =>
+                              n.id === selectedNode.id
+                                ? {
+                                    ...n,
+                                    data: {
+                                      ...n.data,
+                                      rate: undefined,
+                                      component: {
+                                        ...n.data.component,
+                                        serviceCode: serviceCode || null,
+                                        rateId: null,
+                                      },
+                                    },
+                                  }
+                                : n,
+                            ),
+                          )
+                        }
+                        onRate={(rate) => {
+                          setKnown((old) =>
+                            old.some((r) => r.id === rate.id)
+                              ? old
+                              : [...old, rate],
                           );
-                          setSelection({});
+                          setNodes((old) =>
+                            old.map((n) =>
+                              n.id === selectedNode.id
+                                ? {
+                                    ...n,
+                                    data: {
+                                      ...n.data,
+                                      rate,
+                                      component: {
+                                        ...n.data.component,
+                                        rateId: rate.id,
+                                        ...consumptionDefaults(rate),
+                                      },
+                                    },
+                                  }
+                                : n,
+                            ),
+                          );
                         }}
-                      >
-                        Remover ligação
-                      </Button>
+                      />
+                    </>
+                  )}
+
+                  {selectedEdge && (
+                    <EdgeProperties
+                      embedded
+                      key={`${selectedEdge.id}/${model?.revision || 0}`}
+                      edge={selectedEdge.data!.connection}
+                      rates={known}
+                      readOnly={locked}
+                      onApply={(connection) => {
+                        setEdges((old) =>
+                          old.map((e) =>
+                            e.id === connection.id ? edgeFrom(connection) : e,
+                          ),
+                        );
+                        setNotice({
+                          intent: "success",
+                          message:
+                            "Ligação configurada. Salve a estrutura para preservar as alterações.",
+                        });
+                      }}
+                    />
+                  )}
+                </AccordionPanel>
+              </AccordionItem>
+
+              <AccordionItem value="resources" className={styles.section}>
+                <AccordionHeader as="h2" expandIconPosition="end">
+                  Recursos da solução
+                </AccordionHeader>
+                <AccordionPanel
+                  className={styles.sectionContent}
+                  collapseMotion={persistentPanel}
+                  hidden={!sections.includes("resources")}
+                >
+                  <StructurePalette
+                    showTitle={false}
+                    locations={model!.specification!.locations}
+                    primaryProvider={model!.specification!.primaryProvider}
+                    initial={data.components}
+                    locked={locked || !ready}
+                    onAdd={addResource}
+                    onDrag={(event, component) => {
+                      dragged.current = component;
+                      event.dataTransfer.setData(
+                        "application/x-structure-component",
+                        component.id,
+                      );
+                      event.dataTransfer.effectAllowed = "copy";
+                    }}
+                  />
+                </AccordionPanel>
+              </AccordionItem>
+
+              <AccordionItem value="connections" className={styles.section}>
+                <AccordionHeader as="h2" expandIconPosition="end">
+                  Componentes e ligações
+                </AccordionHeader>
+                <AccordionPanel
+                  className={styles.sectionContent}
+                  collapseMotion={persistentPanel}
+                  hidden={!sections.includes("connections")}
+                >
+                  <div className={ui.form}>
+                    {!nodes.length ? (
+                      <p>Adicione um componente da biblioteca para começar.</p>
+                    ) : (
+                      <>
+                        <div className={styles.rows}>
+                          {nodes.map((node) => (
+                            <div className={styles.line} key={node.id}>
+                              <span>{node.data.component.name}</span>
+                              <div className={ui.row}>
+                                <Button
+                                  onClick={() =>
+                                    setSelection({ node: node.id })
+                                  }
+                                >
+                                  Configurar componente
+                                </Button>
+                                {!locked && (
+                                  <Button
+                                    onClick={() => {
+                                      setNodes((old) =>
+                                        old.filter((n) => n.id !== node.id),
+                                      );
+                                      setEdges((old) =>
+                                        old.filter(
+                                          (e) =>
+                                            e.source !== node.id &&
+                                            e.target !== node.id,
+                                        ),
+                                      );
+                                      setSelection({});
+                                    }}
+                                  >
+                                    Remover componente
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {!readOnly && (
+                          <div className={ui.fields}>
+                            <Field label="Origem da ligação">
+                              <Select
+                                value={source}
+                                disabled={pending}
+                                onChange={(_, item) => setSource(item.value)}
+                              >
+                                <option value="">Selecione a origem</option>
+                                {nodes.map((n) => (
+                                  <option value={n.id} key={n.id}>
+                                    {n.data.component.name}
+                                  </option>
+                                ))}
+                              </Select>
+                            </Field>
+                            <Field label="Destino da ligação">
+                              <Select
+                                value={target}
+                                disabled={pending}
+                                onChange={(_, item) => setTarget(item.value)}
+                              >
+                                <option value="">Selecione o destino</option>
+                                {nodes
+                                  .filter((n) => n.id !== source)
+                                  .map((n) => (
+                                    <option value={n.id} key={n.id}>
+                                      {n.data.component.name}
+                                    </option>
+                                  ))}
+                              </Select>
+                            </Field>
+                            <Button
+                              disabled={
+                                pending ||
+                                !source ||
+                                !target ||
+                                source === target
+                              }
+                              onClick={() =>
+                                connect({
+                                  source,
+                                  target,
+                                  sourceHandle: null,
+                                  targetHandle: null,
+                                })
+                              }
+                            >
+                              Adicionar ligação
+                            </Button>
+                          </div>
+                        )}
+                        <div className={styles.rows}>
+                          {edges.map((edge) => (
+                            <div className={styles.line} key={edge.id}>
+                              <span>
+                                {
+                                  nodes.find((n) => n.id === edge.source)?.data
+                                    .component.name
+                                }{" "}
+                                →{" "}
+                                {
+                                  nodes.find((n) => n.id === edge.target)?.data
+                                    .component.name
+                                }
+                              </span>
+                              <div className={ui.row}>
+                                <Button
+                                  onClick={() =>
+                                    setSelection({ edge: edge.id })
+                                  }
+                                >
+                                  Configurar ligação
+                                </Button>
+                                {!locked && (
+                                  <Button
+                                    onClick={() => {
+                                      setEdges((old) =>
+                                        old.filter((e) => e.id !== edge.id),
+                                      );
+                                      setSelection({});
+                                    }}
+                                  >
+                                    Remover ligação
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </Card>
-      {selectedNode && (
-        <NodeProperties
-          key={`${selectedNode.id}/${selectedNode.data.component.rateId}/${model?.revision || 0}`}
-          node={selectedNode.data.component}
-          rate={selectedNode.data.rate}
-          readOnly={locked}
-          onApply={(component) => {
-            setNodes((old) =>
-              old.map((n) =>
-                n.id === component.id
-                  ? { ...n, data: { ...n.data, component } }
-                  : n,
-              ),
-            );
-            setNotice({
-              intent: "success",
-              message:
-                "Propriedades aplicadas. Salve o rascunho para preservá-las.",
-            });
-          }}
-        />
-      )}
-      {selectedEdge && (
-        <EdgeProperties
-          key={`${selectedEdge.id}/${model?.revision || 0}`}
-          edge={selectedEdge.data!.connection}
-          rates={known}
-          readOnly={locked}
-          onApply={(connection) => {
-            setEdges((old) =>
-              old.map((e) =>
-                e.id === connection.id ? edgeFrom(connection) : e,
-              ),
-            );
-            setNotice({
-              intent: "success",
-              message:
-                "Consumo e cobranças aplicados à ligação. Salve o rascunho para preservá-los.",
-            });
-          }}
-        />
-      )}
-      <Card className={shared.card}>
-        <h2 className={ui.title}>Gerar estimativa</h2>
-        <div className={ui.fields}>
-          <Field label="Nome da estimativa" required>
-            <Input
-              value={estimateName}
-              maxLength={200}
-              disabled={pending}
-              onChange={(_, item) => setEstimateName(item.value)}
-            />
-          </Field>
-          <Field label="Cotação PTAX de venda" required>
-            <Select
-              value={quoteId}
-              disabled={pending}
-              onChange={(_, item) => setQuoteId(item.value)}
-            >
-              <option value="">Selecione um fechamento</option>
-              {data.quotes.ok &&
-                data.quotes.data.map((q) => (
-                  <option key={q.id} value={q.id}>
-                    {dateLabel(q.quotationDate)} · {q.sellRate} BRL/USD
-                  </option>
-                ))}
-            </Select>
-          </Field>
-        </div>
-        {!quoteId && (
-          <p>
-            Salve o rascunho e sincronize a PTAX no{" "}
-            <a href="/construtor/cambio">fluxo do Construtor</a> antes de
-            converter o cenário em reais.
-          </p>
-        )}
-        <div>
-          <Button
-            appearance="primary"
-            disabled={
-              pending ||
-              !ready ||
-              !quoteId ||
-              !nodes.length ||
-              !estimateName.trim()
-            }
-            onClick={() =>
-              start(async () => {
-                const savedModel = await persist();
-                if (!savedModel) return;
-                const result = await estimateArchitecture(
-                  savedModel.id,
-                  savedModel.revision,
-                  estimateName,
-                  quoteId,
-                );
-                if (!result.ok) return setNotice(failure(result));
-                setValue(result.data);
-                setNotice({
-                  intent: result.data.usd.complete ? "success" : "warning",
-                  message: result.data.usd.complete
-                    ? "Estimativa calculada em USD e BRL, com a PTAX preservada."
-                    : "A estimativa foi salva com custos pendentes. Revise as propriedades e tarifas dos componentes indicados.",
-                });
-              })
-            }
-          >
-            {pending ? "Calculando…" : "Calcular e salvar estimativa"}
-          </Button>
-        </div>
-      </Card>
-      {value && <ValuationResult value={value} />}
+                </AccordionPanel>
+              </AccordionItem>
+
+              <AccordionItem value="structure" className={styles.section}>
+                <AccordionHeader as="h2" expandIconPosition="end">
+                  Dados da estrutura
+                </AccordionHeader>
+                <AccordionPanel
+                  className={styles.sectionContent}
+                  collapseMotion={persistentPanel}
+                  hidden={!sections.includes("structure")}
+                >
+                  <div className={ui.form}>
+                    {model?.specification && (
+                      <div className={ui.form}>
+                        <Text weight="semibold">
+                          Provedor principal:{" "}
+                          {model.specification.primaryProvider}
+                        </Text>
+                        <Text>
+                          {structureCategories[model.specification.category]} ·{" "}
+                          {
+                            structureEnvironments[
+                              model.specification.environment
+                            ]
+                          }
+                        </Text>
+                        {model.specification.description && (
+                          <Text>{model.specification.description}</Text>
+                        )}
+                        {model.specification.locations.map((l) => (
+                          <Text key={l.provider}>
+                            {l.provider} · {l.regionCode}
+                          </Text>
+                        ))}
+                        <Text size={200}>
+                          As regiões pertencem à estrutura. Para comparar outro
+                          local, use Duplicar estrutura na gestão.
+                        </Text>
+                      </div>
+                    )}
+                    <div className={ui.fields}>
+                      <Field label="Nome da estrutura" required>
+                        <Input
+                          ref={first}
+                          value={name}
+                          maxLength={200}
+                          required
+                          disabled={locked}
+                          onChange={(_, item) => setName(item.value)}
+                        />
+                      </Field>
+                      <Field label="Horas por mês" required>
+                        <Input
+                          type="number"
+                          min="0.000001"
+                          max="744"
+                          step="0.000001"
+                          value={hours}
+                          required
+                          disabled={locked}
+                          onChange={(_, item) => setHours(item.value)}
+                        />
+                      </Field>
+                    </div>
+                    <div className={ui.actions}>
+                      <div className={ui.row}>
+                        <Badge
+                          appearance="tint"
+                          color={readOnly ? "success" : "informative"}
+                        >
+                          {archived
+                            ? "Estrutura arquivada"
+                            : readOnly
+                              ? "Estrutura promovida"
+                              : "Em elaboração"}
+                        </Badge>
+                      </div>
+                      <div className={ui.row}>
+                        {!readOnly && (
+                          <>
+                            <Button
+                              appearance="primary"
+                              disabled={pending || !ready || !nodes.length}
+                              onClick={() =>
+                                start(async () => {
+                                  const savedModel = await persist();
+                                  if (!savedModel) return;
+                                  const result = await publishArchitecture(
+                                    savedModel.id,
+                                    savedModel.revision,
+                                  );
+                                  if (!result.ok)
+                                    return setNotice(failure(result));
+                                  accept(result.data);
+                                  setNotice({
+                                    intent: "success",
+                                    message:
+                                      "Estrutura promovida. A versão pode ser reutilizada nas próximas estimativas.",
+                                  });
+                                })
+                              }
+                            >
+                              Promover estrutura
+                            </Button>
+                          </>
+                        )}
+                        <Button as="a" href="/estruturas">
+                          Ver estruturas
+                        </Button>
+                      </div>
+                    </div>
+                    {readOnly && (
+                      <p className={ui.muted}>
+                        {archived
+                          ? "Desarquive esta estrutura na gestão para continuar trabalhando."
+                          : "Esta versão foi promovida. Para alterar o desenho, crie uma cópia em Modelos reutilizáveis."}
+                      </p>
+                    )}
+                  </div>
+                </AccordionPanel>
+              </AccordionItem>
+
+              <AccordionItem value="estimate" className={styles.section}>
+                <AccordionHeader as="h2" expandIconPosition="end">
+                  Gerar estimativa
+                </AccordionHeader>
+                <AccordionPanel
+                  className={styles.sectionContent}
+                  collapseMotion={persistentPanel}
+                  hidden={!sections.includes("estimate")}
+                >
+                  <div className={ui.form}>
+                    {nodes.some((n) => !n.data.component.rateId) && (
+                      <p>
+                        Vincule uma tarifa a cada componente pela biblioteca de
+                        precificação antes de calcular o custo.
+                      </p>
+                    )}
+                    <div className={ui.fields}>
+                      <Field label="Nome da estimativa" required>
+                        <Input
+                          value={estimateName}
+                          maxLength={200}
+                          disabled={pending}
+                          onChange={(_, item) => setEstimateName(item.value)}
+                        />
+                      </Field>
+                      <Field label="Cotação PTAX de venda" required>
+                        <Select
+                          value={quoteId}
+                          disabled={pending}
+                          onChange={(_, item) => setQuoteId(item.value)}
+                        >
+                          <option value="">Selecione um fechamento</option>
+                          {data.quotes.ok &&
+                            data.quotes.data.map((q) => (
+                              <option key={q.id} value={q.id}>
+                                {dateLabel(q.quotationDate)} · {q.sellRate}{" "}
+                                BRL/USD
+                              </option>
+                            ))}
+                        </Select>
+                      </Field>
+                    </div>
+                    {!quoteId && (
+                      <p>
+                        Salve a estrutura e sincronize a PTAX no{" "}
+                        <a href="/construtor/cambio">fluxo do Construtor</a>{" "}
+                        antes de converter o cenário em reais.
+                      </p>
+                    )}
+                    <div>
+                      <Button
+                        appearance="primary"
+                        disabled={
+                          pending ||
+                          !ready ||
+                          archived ||
+                          nodes.some((n) => !n.data.component.rateId) ||
+                          !quoteId ||
+                          !nodes.length ||
+                          !estimateName.trim()
+                        }
+                        onClick={() =>
+                          start(async () => {
+                            const savedModel = await persist();
+                            if (!savedModel) return;
+                            const result = await estimateArchitecture(
+                              savedModel.id,
+                              savedModel.revision,
+                              estimateName,
+                              quoteId,
+                            );
+                            if (!result.ok) return setNotice(failure(result));
+                            setValue(result.data);
+                            setNotice({
+                              intent: result.data.usd.complete
+                                ? "success"
+                                : "warning",
+                              message: result.data.usd.complete
+                                ? "Estimativa calculada em USD e BRL, com a PTAX preservada."
+                                : "A estimativa foi salva com custos pendentes. Revise as propriedades e tarifas dos componentes indicados.",
+                            });
+                          })
+                        }
+                      >
+                        {pending
+                          ? "Calculando…"
+                          : "Calcular e salvar estimativa"}
+                      </Button>
+                    </div>
+                    {value && <ValuationResult value={value} />}
+                  </div>
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

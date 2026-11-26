@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { submitNewStructure } from "./fixtures/structures";
 import AxeBuilder from "@axe-core/playwright";
 
 test("constructor prepares bases, architect publishes a reusable model and registers a BRL contract", async ({
@@ -6,12 +7,14 @@ test("constructor prepares bases, architect publishes a reusable model and regis
   request,
 }) => {
   test.setTimeout(60000);
-  await request.post("http://127.0.0.1:3101/test/reset?prices=false");
+  await request.post(
+    "http://127.0.0.1:3101/test/reset?prices=false&components=2",
+  );
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/construtor/sincronizacoes");
   const nav = page.getByRole("navigation", { name: "Navegação principal" });
-  await expect(nav.getByText("Arquiteto e estimador")).toBeVisible();
+  await expect(nav.getByText("Estruturas", { exact: true })).toBeVisible();
   await expect(nav.getByText("Construtor e avançado")).toBeVisible();
   await page
     .getByRole("combobox", { name: "Serviço", exact: true })
@@ -43,17 +46,24 @@ test("constructor prepares bases, architect publishes a reusable model and regis
   ).toBeVisible();
   await page
     .getByRole("navigation")
-    .getByRole("link", { name: "Canvas de arquitetura", exact: true })
+    .getByRole("link", { name: "Gestão de estruturas", exact: true })
     .click();
   await page
-    .getByRole("textbox", { name: "Nome da arquitetura", exact: true })
+    .getByRole("button", { name: "Nova estrutura", exact: true })
+    .click();
+  await submitNewStructure(page, "Plataforma de teste");
+  await page
+    .getByRole("button", { name: "Dados da estrutura", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Nome da estrutura", exact: true })
     .fill("Plataforma de teste");
-  const palette = page.getByRole("region", { name: "Tarifas disponíveis" });
+  const palette = page.getByRole("region", { name: "Componentes disponíveis" });
   for (const name of ["API", "Banco"]) {
-    await palette
-      .getByRole("button", { name: "Adicionar componente", exact: true })
-      .first()
-      .click();
+    await palette.getByRole("button").first().click();
+    await expect(
+      page.getByRole("combobox", { name: "Tarifa do componente", exact: true }),
+    ).toHaveValue("123");
     await page
       .getByRole("textbox", { name: "Nome do componente", exact: true })
       .fill(name);
@@ -64,6 +74,9 @@ test("constructor prepares bases, architect publishes a reusable model and regis
       .getByRole("button", { name: "Aplicar ao componente", exact: true })
       .click();
   }
+  await page
+    .getByRole("button", { name: "Componentes e ligações", exact: true })
+    .click();
   await page
     .getByRole("combobox", { name: "Origem da ligação", exact: true })
     .selectOption({ label: "API" });
@@ -80,11 +93,14 @@ test("constructor prepares bases, architect publishes a reusable model and regis
     .getByRole("button", { name: "Aplicar à ligação", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Publicar modelo", exact: true })
+    .getByRole("button", { name: "Promover estrutura", exact: true })
     .click();
   await expect(
-    page.getByText("Modelo publicado no catálogo final.", { exact: false }),
+    page.getByText("Estrutura promovida.", { exact: false }),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Gerar estimativa", exact: true })
+    .click();
   await page
     .getByRole("textbox", { name: "Nome da estimativa", exact: true })
     .fill("Produção da plataforma");
@@ -130,8 +146,11 @@ test("constructor prepares bases, architect publishes a reusable model and regis
       .getByText("Plataforma de teste"),
   ).toBeVisible();
   await page.getByRole("button", { name: "Criar cópia", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Dados da estrutura", exact: true })
+    .click();
   await expect(
-    page.getByRole("textbox", { name: "Nome da arquitetura", exact: true }),
+    page.getByRole("textbox", { name: "Nome da estrutura", exact: true }),
   ).toHaveValue("Plataforma de teste (cópia)");
   const accessibility = await new AxeBuilder({ page })
     .exclude('[data-tabster-dummy][aria-hidden="true"][role="none"]')
@@ -156,13 +175,25 @@ test("no cloud prices means the Canvas cannot invent priced components", async (
   page,
   request,
 }) => {
-  await request.post("http://127.0.0.1:3101/test/reset?prices=false");
+  await request.post(
+    "http://127.0.0.1:3101/test/reset?prices=false&components=2",
+  );
   await page.goto("/canvas");
+  await submitNewStructure(page, "Sem tarifas");
+  await page
+    .getByRole("region", { name: /^Componentes dispon/ })
+    .getByRole("button")
+    .first()
+    .click();
+  await page
+    .getByRole("button", { name: "Dados da estrutura", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Gerar estimativa", exact: true })
+    .click();
+  await expect(page.getByText(/Nenhuma tarifa ativa em USD/)).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Nenhuma tarifa disponível" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Publicar modelo", exact: true }),
+    page.getByRole("combobox", { name: "Tarifa do componente", exact: true }),
   ).toBeDisabled();
   await expect(
     page.getByRole("button", {

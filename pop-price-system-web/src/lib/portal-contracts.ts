@@ -1,3 +1,30 @@
+import type { OffsetPage } from "./contracts";
+
+export type StructureSort =
+  | "provider"
+  | "name"
+  | "category"
+  | "environment"
+  | "status"
+  | "region"
+  | "componentCount"
+  | "predictedMonthlyCost"
+  | "createdAt"
+  | "updatedAt";
+export interface StructureQuery {
+  q?: string;
+  lifecycle?: string;
+  provider?: string;
+  category?: string;
+  environment?: string;
+  status?: string;
+  sort?: StructureSort;
+  direction?: "ASC" | "DESC";
+  size?: number;
+  offset?: number;
+}
+export type StructurePage = OffsetPage<StructureSummary> & { total: number };
+
 export interface CursorPage<T> {
   items: T[];
   size: number;
@@ -69,7 +96,12 @@ export interface ArchitectureNode {
   name: string;
   x: number;
   y: number;
-  rateId: number;
+  rateId: number | null;
+  provider?: string;
+  serviceCode?: string | null;
+  iconKey?: string | null;
+  iconRelease?: string | null;
+  iconAssetPath?: string | null;
   category: string;
   accountCode: string;
   quantity: DecimalValue;
@@ -93,6 +125,7 @@ export interface ArchitectureGraph {
   edges: ArchitectureEdge[];
 }
 export interface ModelSummary {
+  specification?: StructureSpecification | null;
   id: string;
   name: string;
   hoursPerMonth: number;
@@ -104,12 +137,45 @@ export interface ModelSummary {
 export interface ArchitectureModel extends ModelSummary {
   graph: ArchitectureGraph;
   createdAt: string;
+  archivedAt: string | null;
+  specification: StructureSpecification | null;
 }
+export interface StructureSummary extends ModelSummary {
+  createdAt: string;
+  archivedAt: string | null;
+  clouds: string[];
+  componentCount: number;
+  predictedMonthlyCost: number | null;
+  costRevision: number | null;
+  specification: StructureSpecification | null;
+}
+export interface StructureSpecification {
+  primaryProvider: string;
+  description: string;
+  category: string;
+  environment: string;
+  locations: { provider: string; regionCode: string }[];
+}
+export const structureCategories: Record<string, string> = {
+  APPLICATION: "Aplicação",
+  PLATFORM: "Plataforma",
+  DATA: "Dados e analytics",
+  NETWORK: "Rede",
+  SECURITY: "Segurança",
+  OTHER: "Outra",
+};
+export const structureEnvironments: Record<string, string> = {
+  DEVELOPMENT: "Desenvolvimento",
+  TEST: "Teste",
+  HOMOLOGATION: "Homologação",
+  PRODUCTION: "Produção",
+};
 export interface SaveModel {
   name: string;
   hoursPerMonth: number;
   graph: ArchitectureGraph;
   revision: number;
+  specification?: StructureSpecification;
 }
 export interface Parameters {
   hoursPerMonth: number;

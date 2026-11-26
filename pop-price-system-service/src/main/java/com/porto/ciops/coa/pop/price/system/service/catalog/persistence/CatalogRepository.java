@@ -23,9 +23,9 @@ public class CatalogRepository {
                    p.attributes::text, p.usage_type, p.operation, t.modality, t.term_code, d.rate_code,
                    d.unit, d.currency, d.unit_price, d.range_begin, d.range_end, d.effective_at,
                    v.source_version, v.source_url, d.active, d.applies_to::text
-              FROM ratecard.price_dimension d JOIN ratecard.price_term t ON t.id=d.term_id
-              JOIN ratecard.cloud_product p ON p.id=t.product_id
-              JOIN LATERAL (SELECT pv.id, pv.source_version, pv.source_url FROM ratecard.price_version pv
+              FROM pop_price_system_service.price_dimension d JOIN pop_price_system_service.price_term t ON t.id=d.term_id
+              JOIN pop_price_system_service.cloud_product p ON p.id=t.product_id
+              JOIN LATERAL (SELECT pv.id, pv.source_version, pv.source_url FROM pop_price_system_service.price_version pv
                              WHERE pv.dimension_id=d.id ORDER BY pv.id DESC LIMIT 1) v ON true
             """;
 
@@ -35,19 +35,19 @@ public class CatalogRepository {
     }
 
     public List<Provider> providers() {
-        return jdbc.sql("SELECT code,name FROM ratecard.cloud_provider ORDER BY code")
+        return jdbc.sql("SELECT code,name FROM pop_price_system_service.cloud_provider ORDER BY code")
                 .query((rs, n) -> new Provider(rs.getString(1), rs.getString(2)))
                 .list();
     }
 
     public boolean serviceExists(String provider, String code) {
-        return jdbc.sql("SELECT EXISTS (SELECT 1 FROM ratecard.cloud_service WHERE provider=:provider AND code=:code)")
+        return jdbc.sql("SELECT EXISTS (SELECT 1 FROM pop_price_system_service.cloud_service WHERE provider=:provider AND code=:code)")
                 .param("provider", provider).param("code", code).query(Boolean.class).single();
     }
 
     public List<Region> regions(String provider) {
         return jdbc.sql(
-                        "SELECT provider,code,name FROM ratecard.cloud_region WHERE"
+                        "SELECT provider,code,name FROM pop_price_system_service.cloud_region WHERE"
                                 + " provider=:provider ORDER BY code")
                 .param("provider", provider)
                 .query((rs, n) -> new Region(rs.getString(1), rs.getString(2), rs.getString(3)))
@@ -58,10 +58,10 @@ public class CatalogRepository {
         return jdbc.sql(
                         """
                         SELECT s.provider,s.code,s.name,s.attributes::text,sync.last_synchronized_at
-                          FROM ratecard.cloud_service s
+                          FROM pop_price_system_service.cloud_service s
                           LEFT JOIN (
                             SELECT provider,service_code,max(finished_at) AS last_synchronized_at
-                              FROM ratecard.catalog_synchronization
+                              FROM pop_price_system_service.catalog_synchronization
                              WHERE status='COMPLETED' AND (:provider::text IS NULL OR provider=:provider)
                              GROUP BY provider,service_code
                           ) sync ON sync.provider=s.provider AND sync.service_code=s.code
@@ -86,12 +86,12 @@ public class CatalogRepository {
         String sql =
                 """
                 SELECT p.id,p.provider,p.service_code,p.region_code,p.sku,p.family,p.attributes::text,
-                       p.usage_type,p.operation,p.active FROM ratecard.cloud_product p WHERE
+                       p.usage_type,p.operation,p.active FROM pop_price_system_service.cloud_product p WHERE
                 """
                         + productFilter()
                         + """
                          AND p.active=:active AND (:modality::text IS NULL OR EXISTS (
-                           SELECT 1 FROM ratecard.price_term t WHERE t.product_id=p.id AND t.modality=:modality))
+                           SELECT 1 FROM pop_price_system_service.price_term t WHERE t.product_id=p.id AND t.modality=:modality))
                         """;
         return jdbc.sql(sql + cursor("p.id", sort))
                 .params(params(f, cursor, size))
@@ -137,7 +137,7 @@ public class CatalogRepository {
                         RATE_SELECT
                                 + """
                                  WHERE d.active AND t.modality='OnDemand' AND d.effective_at<=now()
-                                   AND (d.term_id,d.currency,d.unit)=(SELECT term_id,currency,unit FROM ratecard.price_dimension WHERE id=:id)
+                                   AND (d.term_id,d.currency,d.unit)=(SELECT term_id,currency,unit FROM pop_price_system_service.price_dimension WHERE id=:id)
                                  ORDER BY d.range_begin,d.id
                                 """)
                 .param("id", rateId)
@@ -149,7 +149,7 @@ public class CatalogRepository {
         return jdbc.sql(
                         """
                         SELECT v.id,v.source_version,v.source_url,v.snapshot::text,v.valid_from,v.valid_to
-                          FROM ratecard.price_version v WHERE v.dimension_id=:rate
+                          FROM pop_price_system_service.price_version v WHERE v.dimension_id=:rate
                         """
                                 + cursor("v.id", sort))
                 .param("rate", rateId)
@@ -173,8 +173,8 @@ public class CatalogRepository {
         return jdbc.sql(
                         """
                         SELECT h.id,h.synchronization_id,h.dimension_id,h.change_type,h.changed_at
-                          FROM ratecard.catalog_change_history h JOIN ratecard.price_dimension d ON d.id=h.dimension_id
-                          JOIN ratecard.price_term t ON t.id=d.term_id JOIN ratecard.cloud_product p ON p.id=t.product_id
+                          FROM pop_price_system_service.catalog_change_history h JOIN pop_price_system_service.price_dimension d ON d.id=h.dimension_id
+                          JOIN pop_price_system_service.price_term t ON t.id=d.term_id JOIN pop_price_system_service.cloud_product p ON p.id=t.product_id
                          WHERE
                         """
                                 + productFilter()

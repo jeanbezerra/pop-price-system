@@ -52,6 +52,7 @@ const componentCategories = (provider) =>
           }))
         : externalCategories[provider] || [];
 let architectureComponents = [];
+let complexRegions = false;
 
 // TEST ONLY: deterministic API state. Never connects to the real database or cloud.
 const services = [
@@ -109,7 +110,8 @@ let available = true,
   servicesReady = true,
   paginateServices = false,
   multiCloud = false,
-  ratePages = false;
+  ratePages = false,
+  regionalPrices = false;
 let parameters = {
   hoursPerMonth: 720,
   revision: 0,
@@ -140,6 +142,7 @@ const server = createServer(async (request, response) => {
     return send({ available });
   }
   if (url.pathname === "/test/reset") {
+    complexRegions = url.searchParams.get("complexRegions") === "true";
     unavailableCategoryProvider = url.searchParams.get("noCategories") || "";
     architectureComponents = Array.from(
       { length: Number(url.searchParams.get("components") || 0) },
@@ -202,6 +205,7 @@ const server = createServer(async (request, response) => {
     paginateServices = url.searchParams.get("paginate") === "true";
     multiCloud = url.searchParams.get("multicloud") === "true";
     ratePages = url.searchParams.get("ratePages") === "true";
+    regionalPrices = url.searchParams.get("regionalPrices") === "true";
     parameters = {
       hoursPerMonth: 720,
       revision: 0,
@@ -394,7 +398,23 @@ const server = createServer(async (request, response) => {
   if (path === "/providers/AWS/regions")
     return send([
       { provider: "AWS", code: "us-east-1", name: "US East (N. Virginia)" },
+      { provider: "AWS", code: "ca-central-1", name: "Canada (Central)" },
+      ...(complexRegions
+        ? [
+            { provider: "AWS", code: "sa-east-1", name: "sa-east-1" },
+            { provider: "AWS", code: "eu-test-9", name: "eu-test-9" },
+            {
+              provider: "AWS",
+              code: "ap-northeast-1-tpe-1",
+              name: "ap-northeast-1-tpe-1",
+            },
+          ]
+        : []),
     ]);
+  if (multiCloud && path === "/providers/AZURE/regions")
+    return send([{ provider: "AZURE", code: "eastus", name: "East US" }]);
+  if (multiCloud && path === "/providers/GCP/regions")
+    return send([{ provider: "GCP", code: "us-central1", name: "Iowa" }]);
   if (path === "/providers/AWS/discovery") {
     servicesReady = true;
     return send({
@@ -462,6 +482,14 @@ const server = createServer(async (request, response) => {
   if (path === "/catalog/rates") {
     const allRates = [
       ...rates,
+      ...(regionalPrices
+        ? rates.map((r) => ({
+            ...r,
+            id: r.id + 100,
+            regionCode: "ca-central-1",
+            unitPrice: 0.2,
+          }))
+        : []),
       ...(ratePages
         ? Array.from({ length: 55 }, (_, index) => ({
             ...rates[1],
@@ -498,7 +526,17 @@ const server = createServer(async (request, response) => {
   }
   if (path.startsWith("/catalog/rates/"))
     return send(
-      rates.find((r) => r.id === Number(path.split("/").pop())) || {},
+      [
+        ...rates,
+        ...(regionalPrices
+          ? rates.map((r) => ({
+              ...r,
+              id: r.id + 100,
+              regionCode: "ca-central-1",
+              unitPrice: 0.2,
+            }))
+          : []),
+      ].find((r) => r.id === Number(path.split("/").pop())) || {},
       200,
     );
   if (path === "/synchronizations" && request.method === "POST") {
@@ -580,38 +618,140 @@ const server = createServer(async (request, response) => {
       createdAt: now,
       updatedAt: now,
       publishedAt: null,
+      archivedAt: null,
     };
     models.unshift(model);
     return send(model);
   }
   if (path === "/architecture-models") {
     const status = url.searchParams.get("status");
-    return send(
-      offsetPage(
-        models.filter((m) => !status || m.status === status),
-        url,
-      ),
-    );
+    const lifecycle = url.searchParams.get("lifecycle") || "ACTIVE";
+    const q = (url.searchParams.get("q") || "").toLowerCase();
+    const provider = url.searchParams.get("provider");
+    const category = url.searchParams.get("category");
+    const environment = url.searchParams.get("environment");
+    const sort = url.searchParams.get("sort") || "updatedAt";
+    const direction = url.searchParams.get("direction") || "DESC";
+    const filtered = models
+      .filter(
+        (m) =>
+          !m.deletedAt &&
+          (!status || m.status === status) &&
+          (lifecycle === "ALL" ||
+            (lifecycle === "ARCHIVED" ? !!m.archivedAt : !m.archivedAt)),
+      )
+      .map((m) => {
+        const value = valuations.find((v) => v.modelId === m.id);
+        return {
+          ...m,
+          clouds: [
+            ...new Set([
+              ...m.graph.nodes.map((n) => n.provider || "AWS"),
+              ...(m.specification?.locations.map((l) => l.provider) || []),
+            ]),
+          ],
+          componentCount: m.graph.nodes.length,
+          predictedMonthlyCost: value?.usd.monthlyCost ?? null,
+          costRevision: value?.modelRevision ?? null,
+        };
+      })
+      .filter(
+        (m) =>
+          (!q || `${m.name} ${m.clouds.join(" ")}`.toLowerCase().includes(q)) &&
+          (!provider || m.clouds.includes(provider)) &&
+          (!category || m.specification?.category === category) &&
+          (!environment || m.specification?.environment === environment),
+      );
+    const valueOf = (m) =>
+      ({
+        provider: m.specification?.primaryProvider,
+        category: m.specification?.category,
+        environment: m.specification?.environment,
+        region: m.specification?.locations.find(
+          (l) => l.provider === m.specification.primaryProvider,
+        )?.regionCode,
+        status: m.archivedAt ? "ARCHIVED" : m.status,
+        name: m.name.toLowerCase(),
+      })[sort] ?? m[sort];
+    filtered.sort((a, b) => {
+      const x = valueOf(a),
+        y = valueOf(b);
+      if (x == null || y == null)
+        return x == null && y == null
+          ? a.id.localeCompare(b.id)
+          : x == null
+            ? 1
+            : -1;
+      const result =
+        typeof x === "number" ? x - y : String(x).localeCompare(String(y));
+      return (
+        (direction === "ASC" ? result : -result) || a.id.localeCompare(b.id)
+      );
+    });
+    return send({ ...offsetPage(filtered, url), total: filtered.length });
   }
   if (path.startsWith("/architecture-models/")) {
     const [, , id, operation] = path.split("/");
     const model = models.find((m) => m.id === id);
-    if (!model) return error("Modelo inexistente.", 404);
+    if (!model || model.deletedAt) return error("Modelo inexistente.", 404);
     if (request.method === "GET") return send(model);
+    if (
+      request.method === "DELETE" ||
+      ["archive", "unarchive"].includes(operation)
+    ) {
+      const revision =
+        request.method === "DELETE"
+          ? Number(url.searchParams.get("revision"))
+          : input.revision;
+      if (revision !== model.revision)
+        return error("Estrutura desatualizada.", 409);
+      if (request.method === "DELETE") {
+        model.deletedAt = new Date().toISOString();
+        response.writeHead(204);
+        return response.end();
+      }
+      model.archivedAt =
+        operation === "archive" ? new Date().toISOString() : null;
+      model.updatedAt = new Date().toISOString();
+      model.revision++;
+      return send(model);
+    }
     if (operation === "duplicate") {
+      if (input.revision !== undefined && input.revision !== model.revision)
+        return error("Estrutura desatualizada.", 409);
       const copy = {
         ...structuredClone(model),
         id: randomUUID(),
-        name: model.name + " (cópia)",
+        name: input.name || model.name + " (cópia)",
+        hoursPerMonth: input.hoursPerMonth || model.hoursPerMonth,
+        specification: input.specification || model.specification,
         status: "DRAFT",
         revision: 0,
         publishedAt: null,
+        archivedAt: null,
+        deletedAt: null,
       };
+      if (
+        input.specification &&
+        JSON.stringify(input.specification.locations) !==
+          JSON.stringify(model.specification?.locations)
+      ) {
+        copy.graph.nodes = copy.graph.nodes.map((n) => ({
+          ...n,
+          rateId: null,
+          availabilityZone: null,
+        }));
+        copy.graph.edges = copy.graph.edges.map((e) => ({ ...e, charges: [] }));
+      }
       models.unshift(copy);
       return send(copy);
     }
     if (request.method === "PUT") {
-      if (model.status !== "DRAFT" || model.revision !== input.revision)
+      if (
+        model.archivedAt ||
+        model.status !== "DRAFT" ||
+        model.revision !== input.revision
+      )
         return error("O modelo mudou ou está publicado.", 409);
       Object.assign(model, input, {
         revision: model.revision + 1,
@@ -620,6 +760,7 @@ const server = createServer(async (request, response) => {
       return send(model);
     }
     if (operation === "publish") {
+      if (model.archivedAt) return error("Desarquive a estrutura.", 409);
       if (!model.graph.nodes.length) return error("Adicione componentes.", 422);
       if (model.status !== "DRAFT" || model.revision !== input.revision)
         return error("Modelo desatualizado.", 409);

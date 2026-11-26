@@ -150,6 +150,12 @@ export function ModelsView({
                           disabled={pending}
                           onClick={() =>
                             start(async () => {
+                              if (!model.specification?.primaryProvider) {
+                                window.location.assign(
+                                  `/estruturas?duplicate=${model.id}`,
+                                );
+                                return;
+                              }
                               const result = await duplicateArchitecture(
                                 model.id,
                               );

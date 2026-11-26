@@ -130,11 +130,11 @@ def main():
     statements = ["-- Generated from the pinned AWS manifest by scripts/import-architecture-icons.py."]
     for _, _, icon in prepared:
         values = [icon[k] for k in ("provider", "key", "release", "name", "kind", "category", "tags", "assetPath", "sourcePath", "sha256")] + [URL, PACKAGE_HASH]
-        statements.append("INSERT INTO ratecard.architecture_icon(provider,icon_key,release,name,kind,category,tags,asset_path,source_path,sha256,source_url,package_sha256) VALUES (" + ",".join(map(literal, values)) + ") ON CONFLICT (provider,icon_key,release) DO NOTHING;")
+        statements.append("INSERT INTO pop_price_system_service.architecture_icon(provider,icon_key,release,name,kind,category,tags,asset_path,source_path,sha256,source_url,package_sha256) VALUES (" + ",".join(map(literal, values)) + ") ON CONFLICT (provider,icon_key,release) DO NOTHING;")
     category_statements = ["-- Generated from official AWS service directories and category symbols; labels are portal translations."]
     for entry in categories:
         values = [entry[k] for k in ("provider","code","name","originalName","sourceUrl","release","origin")]
-        category_statements.append("INSERT INTO ratecard.architecture_component_category(provider,code,name,original_name,source_url,release,origin) VALUES (" + ",".join(map(literal, values)) + ") ON CONFLICT (provider,code) DO NOTHING;")
+        category_statements.append("INSERT INTO pop_price_system_service.architecture_component_category(provider,code,name,original_name,source_url,release,origin) VALUES (" + ",".join(map(literal, values)) + ") ON CONFLICT (provider,code) DO NOTHING;")
     component_values = []
     for _, _, icon in prepared:
         if not icon["registerComponent"]:
@@ -144,13 +144,13 @@ def main():
         component_values.append("(" + ",".join([literal(component_id), literal(icon["key"]), service]) + ")")
     components_sql = """-- Generated official definitions. Stable UUIDs exclude release, name and editable icon reference.
 -- Never overwrite user edits. A price-service link requires an explicit mapping AND an existing catalog row.
-INSERT INTO ratecard.architecture_component(id,provider,service_code,name,category,status,icon_key,icon_release)
+INSERT INTO pop_price_system_service.architecture_component(id,provider,service_code,name,category,status,icon_key,icon_release)
 SELECT CAST(v.id AS uuid),i.provider,s.code,i.name,i.category,'PENDING',i.icon_key,i.release
 FROM (VALUES
-""" + ",\n".join(component_values) + "\n) AS v(id,icon_key,service_code)\nJOIN ratecard.architecture_icon i ON i.provider='AWS' AND i.icon_key=v.icon_key AND i.release=" + literal(RELEASE) + "\nLEFT JOIN ratecard.cloud_service s ON s.provider=i.provider AND s.code=v.service_code\nON CONFLICT (id) DO NOTHING;\n"
+""" + ",\n".join(component_values) + "\n) AS v(id,icon_key,service_code)\nJOIN pop_price_system_service.architecture_icon i ON i.provider='AWS' AND i.icon_key=v.icon_key AND i.release=" + literal(RELEASE) + "\nLEFT JOIN pop_price_system_service.cloud_service s ON s.provider=i.provider AND s.code=v.service_code\nON CONFLICT (id) DO NOTHING;\n"
     normalize_categories_sql = """-- Correct sample icon labels to the category identity from the official source directory.
-UPDATE ratecard.architecture_icon i SET category=c.code
-  FROM ratecard.architecture_component_category c
+UPDATE pop_price_system_service.architecture_icon i SET category=c.code
+  FROM pop_price_system_service.architecture_component_category c
  WHERE c.provider=i.provider AND c.provider='AWS' AND c.origin='PROVIDER'
    AND c.original_name=replace(split_part(i.source_path,'/',2),'Arch_','')
    AND i.category IS DISTINCT FROM c.code;

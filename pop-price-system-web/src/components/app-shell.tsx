@@ -182,6 +182,10 @@ const useStyles = makeStyles({
     "@media (max-width: 640px)": { padding: 0 },
   },
   workspaceContent: { maxWidth: "none" },
+  wideMain: {
+    padding: tokens.spacingHorizontalXL,
+    "@media (max-width: 640px)": { padding: tokens.spacingHorizontalL },
+  },
 });
 
 const navigation = [
@@ -190,9 +194,13 @@ const navigation = [
     items: [{ href: "/", label: "Visão geral", icon: Home20Regular }],
   },
   {
-    persona: "Arquiteto e estimador",
+    persona: "Estruturas",
     items: [
-      { href: "/canvas", label: "Canvas de arquitetura", icon: Share20Regular },
+      {
+        href: "/estruturas",
+        label: "Gestão de estruturas",
+        icon: Share20Regular,
+      },
       { href: "/modelos", label: "Modelos reutilizáveis", icon: Grid20Regular },
       { href: "/estimativas", label: "Estimativas", icon: Calculator20Regular },
       { href: "/contratos", label: "Contratos", icon: DocumentText20Regular },
@@ -230,10 +238,12 @@ export function AppShell({
   children,
   documentationEnabled,
   workspace = false,
+  wide = false,
 }: {
   children: ReactNode;
   documentationEnabled: boolean;
   workspace?: boolean;
+  wide?: boolean;
 }) {
   const styles = useStyles();
   const pathname = usePathname();
@@ -368,12 +378,16 @@ export function AppShell({
       <main
         id="conteudo"
         tabIndex={-1}
-        className={mergeClasses(styles.main, workspace && styles.workspaceMain)}
+        className={mergeClasses(
+          styles.main,
+          wide && styles.wideMain,
+          workspace && styles.workspaceMain,
+        )}
       >
         <div
           className={mergeClasses(
             styles.content,
-            workspace && styles.workspaceContent,
+            (workspace || wide) && styles.workspaceContent,
           )}
         >
           {children}

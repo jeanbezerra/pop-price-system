@@ -40,12 +40,33 @@
           "status": "PUBLISHED",
           "revision": 1,
           "updatedAt": "2026-11-18T12:00:00Z",
-          "publishedAt": "2026-11-18T12:10:00Z"
+          "publishedAt": "2026-11-18T12:10:00Z",
+          "createdAt": "2026-11-18T12:00:00Z",
+          "archivedAt": null,
+          "clouds": [
+            "AWS"
+          ],
+          "componentCount": 1,
+          "predictedMonthlyCost": null,
+          "costRevision": null,
+          "specification": {
+            "description": "Regional planning",
+            "category": "APPLICATION",
+            "environment": "PRODUCTION",
+            "locations": [
+              {
+                "provider": "AWS",
+                "regionCode": "us-east-1"
+              }
+            ],
+            "primaryProvider": "AWS"
+          }
         }
       ],
       "size": 20,
       "offset": 0,
-      "hasMore": false
+      "hasMore": false,
+      "total": 1
     }
   },
   "GET /api/v1/architecture-models/{id}": {
@@ -77,7 +98,19 @@
       "revision": 0,
       "createdAt": "2026-11-18T12:00:00Z",
       "updatedAt": "2026-11-18T12:00:00Z",
-      "publishedAt": null
+      "publishedAt": null,
+      "specification": {
+        "description": "Regional planning",
+        "category": "APPLICATION",
+        "environment": "PRODUCTION",
+        "locations": [
+          {
+            "provider": "AWS",
+            "regionCode": "us-east-1"
+          }
+        ],
+        "primaryProvider": "AWS"
+      }
     }
   },
   "POST /api/v1/architecture-models": {
@@ -104,7 +137,19 @@
         ],
         "edges": []
       },
-      "revision": 0
+      "revision": 0,
+      "specification": {
+        "description": "Regional planning",
+        "category": "APPLICATION",
+        "environment": "PRODUCTION",
+        "locations": [
+          {
+            "provider": "AWS",
+            "regionCode": "us-east-1"
+          }
+        ],
+        "primaryProvider": "AWS"
+      }
     },
     "response": {
       "id": "44444444-4444-4444-8444-444444444444",
@@ -134,7 +179,19 @@
       "revision": 0,
       "createdAt": "2026-11-18T12:00:00Z",
       "updatedAt": "2026-11-18T12:00:00Z",
-      "publishedAt": null
+      "publishedAt": null,
+      "specification": {
+        "description": "Regional planning",
+        "category": "APPLICATION",
+        "environment": "PRODUCTION",
+        "locations": [
+          {
+            "provider": "AWS",
+            "regionCode": "us-east-1"
+          }
+        ],
+        "primaryProvider": "AWS"
+      }
     }
   },
   "PUT /api/v1/architecture-models/{id}": {
@@ -161,7 +218,19 @@
         ],
         "edges": []
       },
-      "revision": 0
+      "revision": 0,
+      "specification": {
+        "description": "Regional planning",
+        "category": "APPLICATION",
+        "environment": "PRODUCTION",
+        "locations": [
+          {
+            "provider": "AWS",
+            "regionCode": "us-east-1"
+          }
+        ],
+        "primaryProvider": "AWS"
+      }
     },
     "response": {
       "id": "44444444-4444-4444-8444-444444444444",
@@ -191,7 +260,19 @@
       "revision": 1,
       "createdAt": "2026-11-18T12:00:00Z",
       "updatedAt": "2026-11-18T12:00:00Z",
-      "publishedAt": null
+      "publishedAt": null,
+      "specification": {
+        "description": "Regional planning",
+        "category": "APPLICATION",
+        "environment": "PRODUCTION",
+        "locations": [
+          {
+            "provider": "AWS",
+            "regionCode": "us-east-1"
+          }
+        ],
+        "primaryProvider": "AWS"
+      }
     }
   },
   "POST /api/v1/architecture-models/{id}/publish": {
@@ -226,7 +307,19 @@
       "revision": 1,
       "createdAt": "2026-11-18T12:00:00Z",
       "updatedAt": "2026-11-18T12:00:00Z",
-      "publishedAt": "2026-11-18T12:10:00Z"
+      "publishedAt": "2026-11-18T12:10:00Z",
+      "specification": {
+        "description": "Regional planning",
+        "category": "APPLICATION",
+        "environment": "PRODUCTION",
+        "locations": [
+          {
+            "provider": "AWS",
+            "regionCode": "us-east-1"
+          }
+        ],
+        "primaryProvider": "AWS"
+      }
     }
   },
   "POST /api/v1/architecture-models/{id}/duplicate": {
@@ -258,7 +351,36 @@
       "revision": 0,
       "createdAt": "2026-11-18T12:00:00Z",
       "updatedAt": "2026-11-18T12:00:00Z",
-      "publishedAt": null
+      "publishedAt": null,
+      "specification": {
+        "description": "Regional planning",
+        "category": "APPLICATION",
+        "environment": "PRODUCTION",
+        "locations": [
+          {
+            "provider": "AWS",
+            "regionCode": "us-east-1"
+          }
+        ],
+        "primaryProvider": "AWS"
+      }
+    },
+    "request": {
+      "name": "Regional copy",
+      "hoursPerMonth": 720,
+      "revision": 1,
+      "specification": {
+        "description": "Regional planning",
+        "category": "APPLICATION",
+        "environment": "PRODUCTION",
+        "locations": [
+          {
+            "provider": "AWS",
+            "regionCode": "us-east-1"
+          }
+        ],
+        "primaryProvider": "AWS"
+      }
     }
   },
   "POST /api/v1/architecture-models/{id}/estimates": {
@@ -1396,5 +1518,101 @@
         "origin": "PROVIDER"
       }
     ]
+  },
+  "POST /api/v1/architecture-models/{id}/archive": {
+    "request": {
+      "revision": 1
+    },
+    "response": {
+      "id": "44444444-4444-4444-8444-444444444444",
+      "name": "Plataforma de observabilidade",
+      "hoursPerMonth": 720,
+      "graph": {
+        "nodes": [
+          {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "name": "Serviço da plataforma",
+            "x": 80,
+            "y": 80,
+            "rateId": 123,
+            "category": "compute",
+            "accountCode": "principal",
+            "quantity": 2,
+            "consumption": 1,
+            "consumptionUnit": "Hrs",
+            "period": "HOUR",
+            "retentionDays": null,
+            "availabilityZone": "use1-az1"
+          }
+        ],
+        "edges": []
+      },
+      "status": "PUBLISHED",
+      "revision": 2,
+      "createdAt": "2026-11-18T12:00:00Z",
+      "updatedAt": "2026-11-18T12:00:00Z",
+      "publishedAt": "2026-11-18T12:10:00Z",
+      "archivedAt": "2026-11-24T12:00:00Z",
+      "specification": {
+        "description": "Regional planning",
+        "category": "APPLICATION",
+        "environment": "PRODUCTION",
+        "locations": [
+          {
+            "provider": "AWS",
+            "regionCode": "us-east-1"
+          }
+        ],
+        "primaryProvider": "AWS"
+      }
+    }
+  },
+  "POST /api/v1/architecture-models/{id}/unarchive": {
+    "request": {
+      "revision": 2
+    },
+    "response": {
+      "id": "44444444-4444-4444-8444-444444444444",
+      "name": "Plataforma de observabilidade",
+      "hoursPerMonth": 720,
+      "graph": {
+        "nodes": [
+          {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "name": "Serviço da plataforma",
+            "x": 80,
+            "y": 80,
+            "rateId": 123,
+            "category": "compute",
+            "accountCode": "principal",
+            "quantity": 2,
+            "consumption": 1,
+            "consumptionUnit": "Hrs",
+            "period": "HOUR",
+            "retentionDays": null,
+            "availabilityZone": "use1-az1"
+          }
+        ],
+        "edges": []
+      },
+      "status": "PUBLISHED",
+      "revision": 3,
+      "createdAt": "2026-11-18T12:00:00Z",
+      "updatedAt": "2026-11-18T12:00:00Z",
+      "publishedAt": "2026-11-18T12:10:00Z",
+      "archivedAt": null,
+      "specification": {
+        "description": "Regional planning",
+        "category": "APPLICATION",
+        "environment": "PRODUCTION",
+        "locations": [
+          {
+            "provider": "AWS",
+            "regionCode": "us-east-1"
+          }
+        ],
+        "primaryProvider": "AWS"
+      }
+    }
   }
 }

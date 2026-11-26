@@ -23,9 +23,8 @@ export function FluentRegistry({ children }: { children: ReactNode }) {
   return (
     <RendererProvider renderer={renderer}>
       <SSRProvider>
-        <FluentProvider theme={appTheme} className="app-provider">
-          {children}
-        </FluentProvider>
+        {/* Provider classes also reach portals. Keep page geometry in AppShell. */}
+        <FluentProvider theme={appTheme}>{children}</FluentProvider>
       </SSRProvider>
     </RendererProvider>
   );

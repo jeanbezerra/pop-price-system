@@ -1,1 +1,1 @@
-PyYAML==6.0.3
+# The local validators use only the Python standard library.

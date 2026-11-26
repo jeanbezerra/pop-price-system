@@ -9,12 +9,20 @@ import shutil
 import subprocess
 import sys
 import uuid
-import yaml
 
 DATABASE_ROOT = Path(__file__).resolve().parents[1]
 SERVICE_ROOT = DATABASE_ROOT.parent / "pop-price-system-service"
-config = next(yaml.safe_load_all((SERVICE_ROOT / "src/main/resources/application.yml").read_text(encoding="utf-8")))
-ds = config["spring"]["datasource"]
+# Read the three single-line datasource assignments from the base Spring document.
+# Profile overrides are intentionally excluded; secrets are supplied through env vars.
+ds = {}
+for line in (SERVICE_ROOT / "src/main/resources/application.properties").read_text(encoding="utf-8").splitlines():
+    if line in ("#---", "!---"):
+        break
+    match = re.fullmatch(r"spring\.datasource\.(url|username|password)\s*=\s*(.*)", line.strip())
+    if match:
+        ds[match[1]] = match[2]
+if set(ds) != {"url", "username", "password"}:
+    raise SystemExit("Missing base datasource configuration in application.properties.")
 
 def resolve(value):
     match = re.fullmatch(r"\$\{([^:}]+)(?::(.*))?\}", str(value))
@@ -35,7 +43,7 @@ def run_pg(name, *args, capture=False):
                           text=True, encoding="utf-8", stdout=subprocess.PIPE if capture else None).stdout
 
 def inspect():
-    statement = "SELECT json_build_object('version',version(),'version_num',current_setting('server_version_num'),'database',current_database(),'role',current_user,'tables',(SELECT count(*) FROM pg_tables WHERE schemaname='ratecard'))"
+    statement = "SELECT json_build_object('version',version(),'version_num',current_setting('server_version_num'),'database',current_database(),'role',current_user,'tables',(SELECT count(*) FROM pg_tables WHERE schemaname='pop_price_system_service'))"
     print(run_pg("psql", "-X", "-v", "ON_ERROR_STOP=1", "-Atc", statement, capture=True).strip(), flush=True)
 
 mode = sys.argv[1] if len(sys.argv) > 1 else "inspect"
@@ -43,6 +51,43 @@ inspect()
 if mode == "verify-deploy":
     from deploy_checks import verify_deploy
     verify_deploy(DATABASE_ROOT, env, run_pg, executable)
+elif mode == "migrate-schema-local":
+    def query(statement):
+        return run_pg("psql", "-X", "-At", "-v", "ON_ERROR_STOP=1", "-c", statement, capture=True).strip()
+
+    existing = json.loads(query("SELECT COALESCE(json_agg(nspname),'[]') FROM pg_namespace WHERE nspname IN ('ratecard','pop_price_system_service')"))
+    if len(existing) != 1:
+        raise SystemExit("Expected exactly one application schema. No migration applied.")
+    source_schema = existing[0]
+
+    def snapshot(schema):
+        tables = query(f"SELECT tablename FROM pg_tables WHERE schemaname='{schema}' ORDER BY tablename").splitlines()
+        data = {}
+        for table in tables:
+            identifier = '"' + table.replace('"', '""') + '"'
+            data[table] = json.loads(query(f"SELECT json_build_object('rows',count(*),'digest',md5(COALESCE(string_agg(md5(to_jsonb(t)::text),'' ORDER BY md5(to_jsonb(t)::text)),''))) FROM {schema}.{identifier} t"))
+        objects = json.loads(query(f"SELECT jsonb_agg(jsonb_build_array(c.oid,c.relname,c.relkind,c.relowner,c.relacl) ORDER BY c.oid) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='{schema}'"))
+        namespace = json.loads(query(f"SELECT json_build_array(oid,nspowner,nspacl) FROM pg_namespace WHERE nspname='{schema}'"))
+        return dict(data=data, objects=objects, namespace=namespace)
+
+    before = snapshot(source_schema)
+    backup = DATABASE_ROOT / "target" / ("before_schema_rename_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + ".dump")
+    backup.parent.mkdir(parents=True, exist_ok=True)
+    run_pg("pg_dump", "--format=custom", "--file", str(backup))
+    if not backup.is_file() or backup.stat().st_size == 0:
+        raise SystemExit("Backup is empty. No migration applied.")
+    print("Backup: " + str(backup), flush=True)
+    run_pg("psql", "-X", "-q", "-v", "ON_ERROR_STOP=1", "-f", "migrations/20261126_rename_application_schema.sql")
+    assert before == snapshot("pop_price_system_service"), "Data or object identities changed; inspect the preserved backup"
+    assert query("SELECT count(*) FROM pg_namespace WHERE nspname='ratecard'") == "0"
+    assert query("SELECT current_schema()") == "pop_price_system_service"
+    report = dict(source_schema=source_schema, target_schema="pop_price_system_service", backup=str(backup),
+                  tables=len(before["data"]), rows_by_table={table: value["rows"] for table,value in before["data"].items()},
+                  data_preserved=True, object_identities_preserved=True, owners_and_privileges_preserved=True,
+                  default_schema_verified=True)
+    destination = DATABASE_ROOT / "target/schema-migration-verification.json"
+    destination.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print("Schema migrated; data, object identities and default schema verified. Report: " + str(destination), flush=True)
 elif mode == "verify":
     db = "pop_portal_rf_test_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S_") + uuid.uuid4().hex[:6]
     run_pg("createdb", "--maintenance-db", env["PGDATABASE"], db)
@@ -72,13 +117,13 @@ elif mode in ("import-aws-components-local", "verify-aws-components"):
         run_pg("createdb", "--maintenance-db", env["PGDATABASE"], db)
         env["PGDATABASE"] = db
         run_pg("psql", "-X", "-q", "-v", "ON_ERROR_STOP=1", "-f", "deploy.sql")
-        run_pg("psql", "-X", "-q", "-v", "ON_ERROR_STOP=1", "-c", "INSERT INTO ratecard.cloud_service(provider,code,name) VALUES ('AWS','AmazonS3','Amazon S3') ON CONFLICT DO NOTHING; DELETE FROM ratecard.architecture_component WHERE icon_key='aws.s3'; UPDATE ratecard.architecture_component SET name='Customized EC2',category='Legacy',revision=9,deleted_at=now() WHERE icon_key='aws.ec2'; INSERT INTO ratecard.architecture_component(id,provider,name,category,status,icon_key,icon_release,characteristics) VALUES ('00000000-0000-4000-8000-000000000001','AWS','Custom S3','Legacy','PENDING','aws.s3','2026-07-31','[{\"name\":\"Purpose\",\"value\":\"Internal\"}]');")
+        run_pg("psql", "-X", "-q", "-v", "ON_ERROR_STOP=1", "-c", "INSERT INTO pop_price_system_service.cloud_service(provider,code,name) VALUES ('AWS','AmazonS3','Amazon S3') ON CONFLICT DO NOTHING; DELETE FROM pop_price_system_service.architecture_component WHERE icon_key='aws.s3'; UPDATE pop_price_system_service.architecture_component SET name='Customized EC2',category='Legacy',revision=9,deleted_at=now() WHERE icon_key='aws.ec2'; INSERT INTO pop_price_system_service.architecture_component(id,provider,name,category,status,icon_key,icon_release,characteristics) VALUES ('00000000-0000-4000-8000-000000000001','AWS','Custom S3','Legacy','PENDING','aws.s3','2026-07-31','[{\"name\":\"Purpose\",\"value\":\"Internal\"}]');")
     else:
         backup = DATABASE_ROOT / "target" / ("components_before_aws_import_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + ".dump")
         backup.parent.mkdir(parents=True, exist_ok=True)
-        run_pg("pg_dump", "--format=custom", "--schema=ratecard", "--no-owner", "--file", str(backup))
+        run_pg("pg_dump", "--format=custom", "--schema=pop_price_system_service", "--no-owner", "--file", str(backup))
         print("Backup local completo: " + str(backup), flush=True)
-    snapshot_query = "SELECT COALESCE(json_agg(c ORDER BY id),'[]')::text FROM ratecard.architecture_component c"
+    snapshot_query = "SELECT COALESCE(json_agg(c ORDER BY id),'[]')::text FROM pop_price_system_service.architecture_component c"
     before = json.loads(run_pg("psql", "-X", "-Atc", snapshot_query, capture=True))
     for _ in range(2):
         run_pg("psql", "-X", "-q", "-1", "-v", "ON_ERROR_STOP=1", "-f", "seeds/aws.sql")
@@ -89,7 +134,7 @@ elif mode in ("import-aws-components-local", "verify-aws-components"):
             imported = after
         else:
             assert imported == after, "Repeated import changed component data"
-    print(run_pg("psql", "-X", "-Atc", "SELECT json_build_object('icons',(SELECT count(*) FROM ratecard.architecture_icon WHERE provider='AWS'),'categories',(SELECT count(*) FROM ratecard.architecture_component_category WHERE provider='AWS'),'components',count(*),'linked',count(service_code),'unlinked',count(*) FILTER (WHERE service_code IS NULL)) FROM ratecard.architecture_component WHERE provider='AWS'", capture=True).strip(), flush=True)
+    print(run_pg("psql", "-X", "-Atc", "SELECT json_build_object('icons',(SELECT count(*) FROM pop_price_system_service.architecture_icon WHERE provider='AWS'),'categories',(SELECT count(*) FROM pop_price_system_service.architecture_component_category WHERE provider='AWS'),'components',count(*),'linked',count(service_code),'unlinked',count(*) FILTER (WHERE service_code IS NULL)) FROM pop_price_system_service.architecture_component WHERE provider='AWS'", capture=True).strip(), flush=True)
     if mode == "verify-aws-components":
         assert len(imported) == 770, "Missing or duplicated imported definitions"
         assert sum(row["name"] == "Customized EC2" and row["revision"] == 9 and row["service_code"] is None and row["deleted_at"] is not None for row in imported) == 1
@@ -99,4 +144,4 @@ elif mode in ("import-aws-components-local", "verify-aws-components"):
     else:
         print("Importação concluída, repetibilidade verificada e cadastros anteriores preservados.", flush=True)
 elif mode != "inspect":
-    raise SystemExit("Modo inválido: inspect, verify-deploy, verify, verify-components, verify-aws-components ou import-aws-components-local. O deploy consolidado é exclusivo para bancos vazios.")
+    raise SystemExit("Modo inválido: inspect, verify-deploy, verify, verify-components, verify-aws-components, migrate-schema-local ou import-aws-components-local. O deploy consolidado é exclusivo para bancos vazios.")
